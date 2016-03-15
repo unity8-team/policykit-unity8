@@ -1,9 +1,9 @@
 
-#include <auth-manager.h>
-#include <polkit-iface.h>
+#include "auth-manager.h"
+#include "polkit-iface.h"
 
-#include <future>
 #include <csignal>
+#include <future>
 
 std::promise<int> retval;
 
