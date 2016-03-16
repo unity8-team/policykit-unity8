@@ -16,6 +16,7 @@ class Agent
 {
 public:
     Agent(const std::shared_ptr<AuthManager> &authmanager);
+    ~Agent();
 
     void authRequest(std::string action_id,
                      std::string message,
@@ -30,4 +31,5 @@ private:
     GLib::ContextThread _thread;
 
     std::shared_ptr<AgentGlib> _glib;
+    gpointer _agentRegistration;
 };
