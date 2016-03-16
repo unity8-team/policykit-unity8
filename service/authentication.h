@@ -1,4 +1,6 @@
 
+#include "auth-manager.h"
+
 #pragma once
 
 #include <string>
@@ -9,4 +11,5 @@ public:
     Authentication();
 
     std::string getError();
+    AuthManager::AuthHandle getHandle();
 };

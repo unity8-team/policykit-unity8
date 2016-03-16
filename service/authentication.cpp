@@ -9,3 +9,8 @@ std::string Authentication::getError()
 {
     return "";
 }
+
+AuthManager::AuthHandle Authentication::getHandle()
+{
+    return 0;
+}

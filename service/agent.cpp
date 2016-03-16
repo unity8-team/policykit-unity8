@@ -4,6 +4,8 @@
 
 #include <utility>
 
+/* Initialize variables, but also register the interface with DBus which
+   makes us ready to start getting messages */
 Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
     : _authmanager(authmanager)
     , _thread()
@@ -39,14 +41,24 @@ Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
     });
 }
 
+/* Make sure to unregister the interface and unregister our cancellables */
 Agent::~Agent()
 {
     _thread.executeOnThread<bool>([this]() {
         polkit_agent_listener_unregister(_agentRegistration);
+
+        while (!cancellables.empty())
+        {
+            unregisterCancellable(cancellables.begin()->first);
+        }
+
         return true;
     });
 }
 
+/* This is where an auth request comes to us from PolicyKit. Here we handle
+   the cancellables and get a handle from the auth manager for cancelling the
+   authentication. */
 void Agent::authRequest(std::string action_id,
                         std::string message,
                         std::string icon_name,
@@ -55,4 +67,46 @@ void Agent::authRequest(std::string action_id,
                         std::shared_ptr<GCancellable> cancellable,
                         std::function<void(Authentication *)> callback)
 {
+    auto handle = _authmanager->createAuthentication(action_id, message, icon_name, cookie, identities,
+                                                     [this, callback](Authentication *auth) {
+                                                         _thread.executeOnThread([this, callback, auth]() {
+                                                             /* When we handle the callback we need to ensure
+                                                                that it happens on the same thread that it came
+                                                                from, which is this one. */
+                                                             unregisterCancellable(auth->getHandle());
+                                                             callback(auth);
+                                                         });
+                                                     });
+
+    gulong connecthandle = 0;
+    if (cancellable)
+    {
+        auto pair = new std::pair<Agent *, AuthManager::AuthHandle>(this, handle);
+        connecthandle = g_cancellable_connect(cancellable.get(), G_CALLBACK(cancelStatic), pair, cancelCleanup);
+    }
+    cancellables.emplace(handle, std::make_pair(cancellable, connecthandle));
+}
+
+/* Static function to do the cancel */
+void Agent::cancelStatic(GCancellable *cancel, gpointer user_data)
+{
+    auto pair = reinterpret_cast<std::pair<Agent *, AuthManager::AuthHandle> *>(user_data);
+    pair->first->_authmanager->cancelAuthentication(pair->second);
+}
+
+/* Static function to clean up the data needed for cancelling */
+void Agent::cancelCleanup(gpointer data)
+{
+    auto pair = reinterpret_cast<std::pair<Agent *, AuthManager::AuthHandle> *>(data);
+    delete pair;
+}
+
+/* Disconnect from the g_cancellable */
+void Agent::unregisterCancellable(AuthManager::AuthHandle handle)
+{
+    auto cancel = cancellables.find(handle);
+    if (cancel == cancellables.end())
+        return;
+    g_cancellable_disconnect(cancel->second.first.get(), cancel->second.second);
+    cancellables.erase(cancel);
 }

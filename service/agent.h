@@ -32,4 +32,10 @@ private:
 
     std::shared_ptr<AgentGlib> _glib;
     gpointer _agentRegistration;
+
+    std::map<AuthManager::AuthHandle, std::pair<std::shared_ptr<GCancellable>, gulong>> cancellables;
+    void unregisterCancellable(AuthManager::AuthHandle handle);
+
+    static void cancelStatic(GCancellable *cancel, gpointer user_data);
+    static void cancelCleanup(gpointer data);
 };
