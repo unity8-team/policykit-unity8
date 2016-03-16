@@ -15,4 +15,7 @@ set(CMAKE_INSTALL_FULL_PKGDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${CMAKE_PROJECT
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -std=c++14 -pthread")
 
+pkg_check_modules(POLICYKIT REQUIRED polkit-agent-1)
+pkg_check_modules(GIO REQUIRED gio-2.0)
+
 add_subdirectory(service)

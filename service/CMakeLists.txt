@@ -1,17 +1,33 @@
 
+include_directories(${POLICYKIT_INCLUDE_DIRS})
+include_directories(${GIO_INCLUDE_DIRS})
+
+add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
+
 ###################
 # Library of Stuff
 ###################
 
 set(LIBRARY_SOURCES
+	agent.h
+	agent.cpp
+	agent-glib.h
+	agent-glib.cpp
 	auth-manager.h
 	auth-manager.cpp
-	polkit-iface.h
-	polkit-iface.cpp
+	authentication.h
+	authentication.cpp
+	glib-thread.h
+	glib-thread.cpp
 )
 
 add_library(service-lib STATIC
 	${LIBRARY_SOURCES}
+)
+
+target_link_libraries(service-lib
+	${POLICYKIT_LIBRARIES}
+	${GIO_LIBRARIES}
 )
 
 ###################
