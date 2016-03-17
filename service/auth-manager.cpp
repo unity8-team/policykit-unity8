@@ -4,6 +4,11 @@
 AuthManager::AuthManager()
 {
 }
+
+AuthManager::~AuthManager()
+{
+}
+
 AuthManager::AuthHandle AuthManager::createAuthentication(std::string action_id,
                                                           std::string message,
                                                           std::string icon_name,
@@ -13,6 +18,7 @@ AuthManager::AuthHandle AuthManager::createAuthentication(std::string action_id,
 {
     return 0;
 }
+
 void AuthManager::cancelAuthentication(AuthHandle handle)
 {
 }

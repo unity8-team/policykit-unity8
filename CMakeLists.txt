@@ -19,3 +19,4 @@ pkg_check_modules(POLICYKIT REQUIRED polkit-agent-1)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 
 add_subdirectory(service)
+add_subdirectory(tests)

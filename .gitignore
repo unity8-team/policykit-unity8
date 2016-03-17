@@ -7,3 +7,6 @@ service/Makefile
 service/cmake_install.cmake
 service/libservice-lib.a
 service/policykit-agent
+tests/agent-test
+tests/gmock/
+tests/libgtest.a
