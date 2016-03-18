@@ -14,7 +14,7 @@ AuthManager::AuthHandle AuthManager::createAuthentication(std::string action_id,
                                                           std::string icon_name,
                                                           std::string cookie,
                                                           std::list<std::string> identities,
-                                                          std::function<void(Authentication *)> finishedCallback)
+                                                          std::function<void(const Authentication&)> finishedCallback)
 {
     return 0;
 }

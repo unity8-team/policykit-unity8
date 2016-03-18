@@ -9,7 +9,8 @@ class Authentication
 {
 public:
     Authentication();
+    virtual ~Authentication();
 
-    std::string getError();
-    AuthManager::AuthHandle getHandle();
+    virtual std::string getError() const;
+    virtual AuthManager::AuthHandle getHandle() const;
 };

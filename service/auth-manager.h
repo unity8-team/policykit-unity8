@@ -13,15 +13,15 @@ class AuthManager
 {
 public:
     AuthManager();
-	virtual ~AuthManager();
+    virtual ~AuthManager();
 
     typedef int AuthHandle;
     virtual AuthHandle createAuthentication(std::string action_id,
-                                    std::string message,
-                                    std::string icon_name,
-                                    std::string cookie,
-                                    std::list<std::string> identities,
-                                    std::function<void(Authentication *)> finishedCallback);
+                                            std::string message,
+                                            std::string icon_name,
+                                            std::string cookie,
+                                            std::list<std::string> identities,
+                                            std::function<void(const Authentication&)> finishedCallback);
     virtual void cancelAuthentication(AuthHandle handle);
 
 private:

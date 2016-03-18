@@ -65,15 +65,15 @@ void Agent::authRequest(std::string action_id,
                         std::string cookie,
                         std::list<std::string> identities,
                         std::shared_ptr<GCancellable> cancellable,
-                        std::function<void(Authentication *)> callback)
+                        std::function<void(const Authentication &)> callback)
 {
     auto handle = _authmanager->createAuthentication(action_id, message, icon_name, cookie, identities,
-                                                     [this, callback](Authentication *auth) {
+                                                     [this, callback](const Authentication &auth) {
                                                          _thread.executeOnThread([this, callback, auth]() {
                                                              /* When we handle the callback we need to ensure
                                                                 that it happens on the same thread that it came
                                                                 from, which is this one. */
-                                                             unregisterCancellable(auth->getHandle());
+                                                             unregisterCancellable(auth.getHandle());
                                                              callback(auth);
                                                          });
                                                      });

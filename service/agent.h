@@ -24,7 +24,7 @@ public:
                      std::string cookie,
                      std::list<std::string> identities,
                      std::shared_ptr<GCancellable> cancellable,
-                     std::function<void(Authentication *)> callback);
+                     std::function<void(const Authentication &)> callback);
 
 private:
     std::shared_ptr<AuthManager> _authmanager;

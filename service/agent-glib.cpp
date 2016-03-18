@@ -45,14 +45,22 @@ static void agent_glib_class_init(AgentGlibClass *klass)
         /* Get a C++ shared ptr for cancellable */
         auto cancel = std::shared_ptr<GCancellable>(reinterpret_cast<GCancellable *>(g_object_ref(cancellable)),
                                                     [](GCancellable *cancel) { g_clear_object(&cancel); });
+        auto task = std::shared_ptr<GTask>(g_task_new(agent_listener, cancellable, callback, user_data),
+                                           [](GTask *task) { g_clear_object(&task); });
 
         /* Make a function object for the callback */
-        auto call = [agent_listener, callback, user_data](Authentication *auth) -> void {
-            /* NOTE: We are capturing pointers here, we don't control their
-               lifecycle. So the capture is well... exciting. */
-            if (callback != nullptr)
-                callback(reinterpret_cast<GObject *>(agent_listener), reinterpret_cast<GAsyncResult *>(auth),
-                         user_data);
+        auto call = [task](const Authentication &auth) -> void {
+            auto autherror = auth.getError();
+
+            if (!autherror.empty())
+            {
+                g_task_return_new_error(task.get(), agent_glib_error_quark(), 0, "Authentication Error: %s",
+                                        autherror.c_str());
+            }
+            else
+            {
+                g_task_return_boolean(task.get(), TRUE);
+            }
         };
 
         agentglib->cpp->authRequest(action_id, message, icon_name, cookie, idents, cancel, call);
@@ -60,18 +68,7 @@ static void agent_glib_class_init(AgentGlibClass *klass)
 
     listener->initiate_authentication_finish = [](PolkitAgentListener *listener, GAsyncResult *res,
                                                   GError **error) -> gboolean {
-        auto auth = reinterpret_cast<Authentication *>(res);
-        auto autherror = auth->getError();
-
-        if (!autherror.empty())
-        {
-            g_set_error(error, agent_glib_error_quark(), 0, "Authentication Error: %s", autherror.c_str());
-            return TRUE;
-        }
-        else
-        {
-            return FALSE;
-        }
+        return g_task_propagate_boolean(reinterpret_cast<GTask *>(res), error);
     };
 }
 

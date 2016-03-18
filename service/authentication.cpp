@@ -5,12 +5,16 @@ Authentication::Authentication()
 {
 }
 
-std::string Authentication::getError()
+Authentication::~Authentication()
+{
+}
+
+std::string Authentication::getError() const
 {
     return "";
 }
 
-AuthManager::AuthHandle Authentication::getHandle()
+AuthManager::AuthHandle Authentication::getHandle() const
 {
     return 0;
 }

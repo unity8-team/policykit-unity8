@@ -10,3 +10,6 @@ service/policykit-agent
 tests/agent-test
 tests/gmock/
 tests/libgtest.a
+CTestTestfile.cmake
+Testing/
+tests/CTestTestfile.cmake
