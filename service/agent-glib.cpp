@@ -45,14 +45,14 @@ static void agent_glib_class_init(AgentGlibClass *klass)
         /* Get a C++ shared ptr for cancellable */
         auto cancel = std::shared_ptr<GCancellable>(reinterpret_cast<GCancellable *>(g_object_ref(cancellable)),
                                                     [](GCancellable *cancel) { g_clear_object(&cancel); });
-        auto task = std::shared_ptr<GTask>(g_task_new(agent_listener, cancellable, callback, user_data),
+        auto task = std::shared_ptr<GTask>(g_task_new(agent_listener, nullptr, callback, user_data),
                                            [](GTask *task) { g_clear_object(&task); });
 
         /* Make a function object for the callback */
         auto call = [task](const Authentication &auth) -> void {
             auto autherror = auth.getError();
 
-            if (!autherror.empty())
+            if (!autherror.empty() && !g_task_had_error(task.get()))
             {
                 g_task_return_new_error(task.get(), agent_glib_error_quark(), 0, "Authentication Error: %s",
                                         autherror.c_str());

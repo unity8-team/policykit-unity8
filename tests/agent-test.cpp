@@ -11,6 +11,10 @@
 #include "agent.h"
 #include "auth-manager.h"
 
+/* System Libs */
+#include <chrono>
+#include <thread>
+
 class AgentTest : public ::testing::Test
 {
 protected:
@@ -100,14 +104,14 @@ public:
     AuthenticationNoErrorFake()
     {
     }
-    virtual std::string getError()
+    virtual std::string getError() const
     {
         return "";
     }
 
-    virtual AuthManager::AuthHandle getHandle()
+    virtual AuthManager::AuthHandle getCookie() const
     {
-        return 5;
+        return "cookie-monster";
     }
 };
 
@@ -117,14 +121,15 @@ public:
     AuthenticationCancelFake()
     {
     }
-    virtual std::string getError()
+
+    virtual std::string getError() const
     {
         return "Cancelled";
     }
 
-    virtual AuthManager::AuthHandle getHandle()
+    virtual AuthManager::AuthHandle getCookie() const
     {
-        return 5;
+        return "cookie-monster";
     }
 };
 
@@ -165,6 +170,7 @@ public:
                                   g_debug("Callback for AuthCallbackDelay");
                                   auto callback = reinterpret_cast<T *>(user_data);
                                   auto fake = AuthT();
+                                  g_debug("Fake cookie: %s", fake.getCookie().c_str());
                                   (*callback)(fake);
                                   return G_SOURCE_REMOVE;
                               },
@@ -219,7 +225,7 @@ TEST_F(AgentTest, StandardRequest)
 
     EXPECT_CALL(*managermock, createAuthentication("my-action", "Do an authentication", "icon-name", "cookie-monster",
                                                    testing::_, AuthNoErrorCallback()))
-        .WillOnce(testing::Return(5));
+        .WillOnce(testing::Return("cookie-monster"));
 
     auto beginfuture =
         policykit->beginAuthentication(g_dbus_connection_get_unique_name(system), "/com/canonical/unity8/policyKit",
@@ -237,18 +243,71 @@ TEST_F(AgentTest, CancelRequest)
 
     EXPECT_CALL(*managermock, createAuthentication("my-action", "Do an authentication", "icon-name", "cookie-monster",
                                                    testing::_, AuthDelayCancelCallback()))
-        .WillOnce(testing::Return(5));
+        .WillOnce(testing::Return("cookie-monster"));
 
     auto beginfuture =
         policykit->beginAuthentication(g_dbus_connection_get_unique_name(system), "/com/canonical/unity8/policyKit",
                                        "my-action", "Do an authentication", "icon-name", {}, /* details */
                                        "cookie-monster", policykit->userIdentity());
 
-    EXPECT_CALL(*managermock, cancelAuthentication(5)).WillOnce(testing::Return());
+    EXPECT_CALL(*managermock, cancelAuthentication("cookie-monster")).WillOnce(testing::Return());
 
     auto cancelfuture = policykit->cancelAuthentication(g_dbus_connection_get_unique_name(system),
                                                         "/com/canonical/unity8/policyKit", "cookie-monster");
 
     EXPECT_EQ(true, cancelfuture.get());
+    EXPECT_EQ(false, beginfuture.get());
+}
+
+class AuthManagerCancelFake : public AuthManager
+{
+public:
+    std::map<AuthManager::AuthHandle,
+             std::tuple<std::string,
+                        std::string,
+                        std::string,
+                        std::string,
+                        std::list<std::string>,
+                        std::function<void(const Authentication &)>>>
+        openAuths;
+
+    AuthManager::AuthHandle createAuthentication(std::string action_id,
+                                                 std::string message,
+                                                 std::string icon_name,
+                                                 std::string cookie,
+                                                 std::list<std::string> identities,
+                                                 std::function<void(const Authentication &)> finishedCallback)
+    {
+        openAuths.emplace(cookie, std::make_tuple(action_id, message, icon_name, cookie, identities, finishedCallback));
+        return cookie;
+    }
+
+    void cancelAuthentication(AuthHandle handle)
+    {
+        auto entry = openAuths.find(handle);
+        if (entry == openAuths.end())
+            return;
+
+        AuthenticationCancelFake auth;
+        std::get<5>((*entry).second)(auth);
+        openAuths.erase(entry);
+    }
+};
+
+TEST_F(AgentTest, ShutdownCancel)
+{
+    auto managermock = std::make_shared<AuthManagerCancelFake>();
+
+    auto agent = std::make_shared<Agent>(managermock);
+
+    auto beginfuture =
+        policykit->beginAuthentication(g_dbus_connection_get_unique_name(system), "/com/canonical/unity8/policyKit",
+                                       "my-action", "Do an authentication", "icon-name", {}, /* details */
+                                       "cookie-monster", policykit->userIdentity());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    agent.reset();
+
     EXPECT_EQ(false, beginfuture.get());
 }

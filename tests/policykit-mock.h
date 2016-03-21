@@ -97,10 +97,11 @@ public:
         const std::string &cookie,
         const std::list<std::pair<std::string, std::map<std::string, std::shared_ptr<GVariant>>>> &identities)
     {
-        std::promise<bool> *promise = new std::promise<bool>();
 
-        thread.executeOnThread(
-            [promise, dbusAddress, dbusPath, action_id, message, icon_name, details, cookie, identities]() {
+        return thread.executeOnThread<std::future<bool>>(
+            [dbusAddress, dbusPath, action_id, message, icon_name, details, cookie, identities]() {
+                std::promise<bool> *promise = new std::promise<bool>();
+
                 GVariantBuilder builder;
                 g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
                 g_variant_builder_add_value(&builder, g_variant_new_string(action_id.c_str()));
@@ -160,18 +161,18 @@ public:
 
                     g_object_unref(system);
                 }
-            });
 
-        return promise->get_future();
+                return promise->get_future();
+            });
     }
 
     std::future<bool> cancelAuthentication(const std::string &dbusAddress,
                                            const std::string &dbusPath,
                                            const std::string &cookie)
     {
-        std::promise<bool> *promise = new std::promise<bool>();
+        return thread.executeOnThread<std::future<bool>>([dbusAddress, dbusPath, cookie]() {
+            std::promise<bool> *promise = new std::promise<bool>();
 
-        thread.executeOnThread([promise, dbusAddress, dbusPath, cookie]() {
             GVariantBuilder builder;
             g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
             g_variant_builder_add_value(&builder, g_variant_new_string(cookie.c_str()));
@@ -197,9 +198,9 @@ public:
 
                 g_object_unref(system);
             }
-        });
 
-        return promise->get_future();
+            return promise->get_future();
+        });
     }
 
     static void dbusMessageCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)

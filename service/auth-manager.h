@@ -15,7 +15,7 @@ public:
     AuthManager();
     virtual ~AuthManager();
 
-    typedef int AuthHandle;
+    typedef std::string AuthHandle;
     virtual AuthHandle createAuthentication(std::string action_id,
                                             std::string message,
                                             std::string icon_name,

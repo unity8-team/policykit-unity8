@@ -12,5 +12,5 @@ public:
     virtual ~Authentication();
 
     virtual std::string getError() const;
-    virtual AuthManager::AuthHandle getHandle() const;
+    virtual AuthManager::AuthHandle getCookie() const;
 };

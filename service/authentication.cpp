@@ -14,7 +14,7 @@ std::string Authentication::getError() const
     return "";
 }
 
-AuthManager::AuthHandle Authentication::getHandle() const
+AuthManager::AuthHandle Authentication::getCookie() const
 {
-    return 0;
+    return "";
 }
