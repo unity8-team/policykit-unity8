@@ -7,7 +7,8 @@
 #include <memory>
 #include <string>
 
-class Authentication;
+#include "authentication.h"
+#include "glib-thread.h"
 
 class AuthManager
 {
@@ -15,15 +16,15 @@ public:
     AuthManager();
     virtual ~AuthManager();
 
-    typedef std::string AuthHandle;
-    virtual AuthHandle createAuthentication(std::string action_id,
-                                            std::string message,
-                                            std::string icon_name,
-                                            std::string cookie,
-                                            std::list<std::string> identities,
-                                            std::function<void(const Authentication&)> finishedCallback);
-    virtual void cancelAuthentication(AuthHandle handle);
+    virtual std::string createAuthentication(const std::string& action_id,
+                                             const std::string& message,
+                                             const std::string& icon_name,
+                                             const std::string& cookie,
+                                             const std::list<std::string>& identities,
+                                             const std::function<void(Authentication::State)>& finishedCallback);
+    virtual bool cancelAuthentication(const std::string& handle);
 
 private:
-    std::map<AuthHandle, std::shared_ptr<Authentication>> inFlight;
+    std::map<std::string, std::shared_ptr<Authentication>> inFlight;
+    GLib::ContextThread thread;
 };

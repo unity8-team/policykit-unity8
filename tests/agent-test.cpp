@@ -5,11 +5,13 @@
 #include <libdbustest/dbus-test.h>
 
 /* Mocks */
+#include "notifications-mock.h"
 #include "policykit-mock.h"
 
 /* Local Headers */
 #include "agent.h"
 #include "auth-manager.h"
+#include "authentication.h"
 
 /* System Libs */
 #include <chrono>
@@ -18,15 +20,22 @@
 class AgentTest : public ::testing::Test
 {
 protected:
-    DbusTestService *service = NULL;
-
+    DbusTestService *system_service = NULL;
     GDBusConnection *system = NULL;
+
+    DbusTestService *session_service = NULL;
+    GDBusConnection *session = NULL;
+
     std::shared_ptr<PolicyKitMock> policykit;
+    std::shared_ptr<NotificationsMock> notifications;
 
     virtual void SetUp()
     {
-        service = dbus_test_service_new(NULL);
-        dbus_test_service_set_bus(service, DBUS_TEST_SERVICE_BUS_SYSTEM);
+        system_service = dbus_test_service_new(nullptr);
+        dbus_test_service_set_bus(system_service, DBUS_TEST_SERVICE_BUS_SYSTEM);
+
+        session_service = dbus_test_service_new(nullptr);
+        dbus_test_service_set_bus(session_service, DBUS_TEST_SERVICE_BUS_SESSION);
 
 /* Useful for debugging test failures, not needed all the time (until it fails) */
 #if 0
@@ -41,32 +50,50 @@ protected:
         dbus_test_service_add_task(service, bustle.get());
 #endif
 
+        /* System Mocks */
         policykit = std::make_shared<PolicyKitMock>();
 
-        dbus_test_service_add_task(service, (DbusTestTask *)*policykit);
-        dbus_test_service_start_tasks(service);
+        dbus_test_service_add_task(system_service, (DbusTestTask *)*policykit);
+        dbus_test_service_start_tasks(system_service);
 
-        system = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, NULL);
+        /* Session Mocks */
+        notifications = std::make_shared<NotificationsMock>();
+
+        dbus_test_service_add_task(session_service, (DbusTestTask *)*notifications);
+        dbus_test_service_start_tasks(session_service);
+
+        /* Watch busses */
+        system = g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr);
         ASSERT_NE(nullptr, system);
         g_dbus_connection_set_exit_on_close(system, FALSE);
         g_object_add_weak_pointer(G_OBJECT(system), (gpointer *)&system);
+
+        session = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
+        ASSERT_NE(nullptr, session);
+        g_dbus_connection_set_exit_on_close(session, FALSE);
+        g_object_add_weak_pointer(G_OBJECT(session), (gpointer *)&session);
     }
 
     virtual void TearDown()
     {
         policykit.reset();
-        g_clear_object(&service);
+        notifications.reset();
+
+        g_clear_object(&system_service);
+        g_clear_object(&session_service);
 
         g_object_unref(system);
+        g_object_unref(session);
 
         unsigned int cleartry = 0;
-        while (system != NULL && cleartry < 100)
+        while (system != nullptr && session != nullptr && cleartry < 100)
         {
             loop(100);
             cleartry++;
         }
 
         ASSERT_EQ(nullptr, system);
+        ASSERT_EQ(nullptr, session);
     }
 
     static gboolean timeout_cb(gpointer user_data)
@@ -89,60 +116,30 @@ class AuthManagerMock : public AuthManager
 {
 public:
     MOCK_METHOD6(createAuthentication,
-                 AuthManager::AuthHandle(std::string,
-                                         std::string,
-                                         std::string,
-                                         std::string,
-                                         std::list<std::string>,
-                                         std::function<void(const Authentication &)>));
-    MOCK_METHOD1(cancelAuthentication, void(AuthManager::AuthHandle));
+                 std::string(const std::string &,
+                             const std::string &,
+                             const std::string &,
+                             const std::string &,
+                             const std::list<std::string> &,
+                             const std::function<void(Authentication::State)> &));
+    MOCK_METHOD1(cancelAuthentication, bool(const std::string &));
 };
 
-class AuthenticationNoErrorFake : public Authentication
-{
-public:
-    AuthenticationNoErrorFake()
-    {
-    }
-    virtual std::string getError() const
-    {
-        return "";
-    }
-
-    virtual AuthManager::AuthHandle getCookie() const
-    {
-        return "cookie-monster";
-    }
-};
-
-class AuthenticationCancelFake : public Authentication
-{
-public:
-    AuthenticationCancelFake()
-    {
-    }
-
-    virtual std::string getError() const
-    {
-        return "Cancelled";
-    }
-
-    virtual AuthManager::AuthHandle getCookie() const
-    {
-        return "cookie-monster";
-    }
-};
-
-template <typename AuthT>
 class AuthCallbackMatcher
 {
+    Authentication::State _state;
+
 public:
+    AuthCallbackMatcher(Authentication::State state)
+        : _state(state)
+    {
+    }
+
     template <typename T>
     bool MatchAndExplain(T callback, ::testing::MatchResultListener *listener) const
     {
         g_debug("Callback for AuthCallbackMatcher");
-        auto fake = AuthT();
-        callback(fake);
+        callback(_state);
         return true;
     }
 
@@ -156,7 +153,7 @@ public:
     }
 };
 
-template <typename AuthT>
+template <Authentication::State state>
 class AuthCallbackDelay
 {
 public:
@@ -169,9 +166,7 @@ public:
                               [](gpointer user_data) -> gboolean {
                                   g_debug("Callback for AuthCallbackDelay");
                                   auto callback = reinterpret_cast<T *>(user_data);
-                                  auto fake = AuthT();
-                                  g_debug("Fake cookie: %s", fake.getCookie().c_str());
-                                  (*callback)(fake);
+                                  (*callback)(state);
                                   return G_SOURCE_REMOVE;
                               },
                               alloct,
@@ -196,14 +191,14 @@ public:
     }
 };
 
-inline ::testing::PolymorphicMatcher<AuthCallbackMatcher<AuthenticationNoErrorFake>> AuthNoErrorCallback()
+inline ::testing::PolymorphicMatcher<AuthCallbackMatcher> AuthNoErrorCallback()
 {
-    return ::testing::MakePolymorphicMatcher(AuthCallbackMatcher<AuthenticationNoErrorFake>());
+    return ::testing::MakePolymorphicMatcher(AuthCallbackMatcher(Authentication::State::SUCCESS));
 }
 
-inline ::testing::PolymorphicMatcher<AuthCallbackDelay<AuthenticationCancelFake>> AuthDelayCancelCallback()
+inline ::testing::PolymorphicMatcher<AuthCallbackDelay<Authentication::State::CANCELLED>> AuthDelayCancelCallback()
 {
-    return ::testing::MakePolymorphicMatcher(AuthCallbackDelay<AuthenticationCancelFake>());
+    return ::testing::MakePolymorphicMatcher(AuthCallbackDelay<Authentication::State::CANCELLED>());
 }
 
 /* Test to make sure we can just build a default object
@@ -250,7 +245,7 @@ TEST_F(AgentTest, CancelRequest)
                                        "my-action", "Do an authentication", "icon-name", {}, /* details */
                                        "cookie-monster", policykit->userIdentity());
 
-    EXPECT_CALL(*managermock, cancelAuthentication("cookie-monster")).WillOnce(testing::Return());
+    EXPECT_CALL(*managermock, cancelAuthentication("cookie-monster")).WillOnce(testing::Return(true));
 
     auto cancelfuture = policykit->cancelAuthentication(g_dbus_connection_get_unique_name(system),
                                                         "/com/canonical/unity8/policyKit", "cookie-monster");
@@ -262,35 +257,37 @@ TEST_F(AgentTest, CancelRequest)
 class AuthManagerCancelFake : public AuthManager
 {
 public:
-    std::map<AuthManager::AuthHandle,
+    std::map<std::string,
              std::tuple<std::string,
                         std::string,
                         std::string,
                         std::string,
                         std::list<std::string>,
-                        std::function<void(const Authentication &)>>>
+                        std::function<void(Authentication::State)>>>
         openAuths;
 
-    AuthManager::AuthHandle createAuthentication(std::string action_id,
-                                                 std::string message,
-                                                 std::string icon_name,
-                                                 std::string cookie,
-                                                 std::list<std::string> identities,
-                                                 std::function<void(const Authentication &)> finishedCallback)
+    virtual std::string createAuthentication(const std::string &action_id,
+                                             const std::string &message,
+                                             const std::string &icon_name,
+                                             const std::string &cookie,
+                                             const std::list<std::string> &identities,
+                                             const std::function<void(Authentication::State)> &finishedCallback)
     {
         openAuths.emplace(cookie, std::make_tuple(action_id, message, icon_name, cookie, identities, finishedCallback));
         return cookie;
     }
 
-    void cancelAuthentication(AuthHandle handle)
+    virtual bool cancelAuthentication(const std::string &handle)
     {
+        g_debug("Cancelling in 'AuthManagerCancelFake' item: %s", handle.c_str());
         auto entry = openAuths.find(handle);
         if (entry == openAuths.end())
-            return;
+            throw std::runtime_error("Unable to find item: " + handle);
 
-        AuthenticationCancelFake auth;
-        std::get<5>((*entry).second)(auth);
+        std::get<5>((*entry).second)(Authentication::State::CANCELLED);
         openAuths.erase(entry);
+
+        return true;
     }
 };
 
@@ -306,6 +303,8 @@ TEST_F(AgentTest, ShutdownCancel)
                                        "cookie-monster", policykit->userIdentity());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    EXPECT_EQ(1, managermock->openAuths.size());
 
     agent.reset();
 

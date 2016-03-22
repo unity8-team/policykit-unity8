@@ -46,4 +46,5 @@ add_custom_target(format
 	COMMAND clang-format -i -style=file
 	agent-test.cpp
 	policykit-mock.h
+	notifications-mock.h
 )

@@ -24,7 +24,7 @@ public:
                      std::string cookie,
                      std::list<std::string> identities,
                      std::shared_ptr<GCancellable> cancellable,
-                     std::function<void(const Authentication &)> callback);
+                     std::function<void(Authentication::State)> callback);
 
 private:
     std::shared_ptr<AuthManager> _authmanager;
@@ -33,8 +33,8 @@ private:
     std::shared_ptr<AgentGlib> _glib;
     gpointer _agentRegistration;
 
-    std::map<AuthManager::AuthHandle, std::pair<std::shared_ptr<GCancellable>, gulong>> cancellables;
-    void unregisterCancellable(AuthManager::AuthHandle handle);
+    std::map<std::string, std::pair<std::shared_ptr<GCancellable>, gulong>> cancellables;
+    void unregisterCancellable(std::string handle);
 
     static void cancelStatic(GCancellable *cancel, gpointer user_data);
     static void cancelCleanup(gpointer data);

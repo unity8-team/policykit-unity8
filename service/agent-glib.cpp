@@ -49,13 +49,10 @@ static void agent_glib_class_init(AgentGlibClass *klass)
                                            [](GTask *task) { g_clear_object(&task); });
 
         /* Make a function object for the callback */
-        auto call = [task](const Authentication &auth) -> void {
-            auto autherror = auth.getError();
-
-            if (!autherror.empty() && !g_task_had_error(task.get()))
+        auto call = [task](Authentication::State state) -> void {
+            if (state == Authentication::State::CANCELLED)
             {
-                g_task_return_new_error(task.get(), agent_glib_error_quark(), 0, "Authentication Error: %s",
-                                        autherror.c_str());
+                g_task_return_new_error(task.get(), agent_glib_error_quark(), 0, "Authentication Error: Cancelled");
             }
             else
             {

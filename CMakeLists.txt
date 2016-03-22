@@ -17,6 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -std=c++14 -pthread")
 
 pkg_check_modules(POLICYKIT REQUIRED polkit-agent-1)
 pkg_check_modules(GIO REQUIRED gio-2.0)
+pkg_check_modules(NOTIFY REQUIRED libnotify)
 
 add_subdirectory(service)
 

@@ -68,12 +68,12 @@ void Agent::authRequest(std::string action_id,
                         std::string cookie,
                         std::list<std::string> identities,
                         std::shared_ptr<GCancellable> cancellable,
-                        std::function<void(const Authentication &)> callback)
+                        std::function<void(Authentication::State)> callback)
 {
     gulong connecthandle = 0;
     if (cancellable)
     {
-        auto pair = new std::pair<Agent *, AuthManager::AuthHandle>(this, cookie);
+        auto pair = new std::pair<Agent *, std::string>(this, cookie);
         connecthandle = g_cancellable_connect(cancellable.get(), G_CALLBACK(cancelStatic), pair, cancelCleanup);
     }
 
@@ -81,13 +81,13 @@ void Agent::authRequest(std::string action_id,
     cancellables.emplace(cookie, std::make_pair(cancellable, connecthandle));
 
     _authmanager->createAuthentication(action_id, message, icon_name, cookie, identities,
-                                       [this, callback](const Authentication &auth) {
-                                           _thread.executeOnThread<bool>([this, callback, &auth]() {
+                                       [this, cookie, callback](Authentication::State state) {
+                                           _thread.executeOnThread<bool>([this, cookie, callback, state]() {
                                                /* When we handle the callback we need to ensure
                                                   that it happens on the same thread that it came
                                                   from, which is this one. */
-                                               unregisterCancellable(auth.getCookie());
-                                               callback(auth);
+                                               unregisterCancellable(cookie);
+                                               callback(state);
                                                return true;
                                            });
                                        });
@@ -96,19 +96,19 @@ void Agent::authRequest(std::string action_id,
 /* Static function to do the cancel */
 void Agent::cancelStatic(GCancellable *cancel, gpointer user_data)
 {
-    auto pair = reinterpret_cast<std::pair<Agent *, AuthManager::AuthHandle> *>(user_data);
+    auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(user_data);
     pair->first->_authmanager->cancelAuthentication(pair->second);
 }
 
 /* Static function to clean up the data needed for cancelling */
 void Agent::cancelCleanup(gpointer data)
 {
-    auto pair = reinterpret_cast<std::pair<Agent *, AuthManager::AuthHandle> *>(data);
+    auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(data);
     delete pair;
 }
 
 /* Disconnect from the g_cancellable */
-void Agent::unregisterCancellable(AuthManager::AuthHandle handle)
+void Agent::unregisterCancellable(std::string handle)
 {
     g_debug("Unregistering cancellable authorization: %s", handle.c_str());
     auto cancel = cancellables.find(handle);
