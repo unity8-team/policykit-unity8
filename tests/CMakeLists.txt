@@ -1,6 +1,7 @@
 
 include_directories("${CMAKE_SOURCE_DIR}/service")
 include_directories(${GIO_INCLUDE_DIRS})
+include_directories(${NOTIFY_INCLUDE_DIRS})
 
 ##############
 # Google Test

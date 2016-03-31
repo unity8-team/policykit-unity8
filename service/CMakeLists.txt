@@ -20,6 +20,8 @@ set(LIBRARY_SOURCES
 	authentication.cpp
 	glib-thread.h
 	glib-thread.cpp
+	session-iface.h
+	session-iface.cpp
 )
 
 add_library(service-lib STATIC
