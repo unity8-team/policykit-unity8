@@ -13,3 +13,4 @@ tests/libgtest.a
 CTestTestfile.cmake
 Testing/
 tests/CTestTestfile.cmake
+data/unity8-policy-kit.conf

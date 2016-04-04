@@ -20,6 +20,7 @@ pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(NOTIFY REQUIRED libnotify)
 
 add_subdirectory(service)
+add_subdirectory(data)
 
 enable_testing()
 

@@ -50,7 +50,7 @@ target_link_libraries(policykit-agent
 )
 install(TARGETS policykit-agent
 	RUNTIME
-	DESTINATION "${CMAKE_INSTALL_FULL_LIBEXECDIR}/unity8-policy-kit/"
+	DESTINATION ${CMAKE_INSTALL_FULL_PKGLIBEXECDIR}
 )
 
 ###################

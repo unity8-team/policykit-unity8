@@ -1,0 +1,4 @@
+
+start on started unity8
+
+exec @CMAKE_INSTALL_FULL_PKGLIBEXECDIR@/policykit-agent
