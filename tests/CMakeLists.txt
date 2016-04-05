@@ -43,7 +43,7 @@ add_test (NAME agent-test
 # Formatting
 ##############
 
-add_custom_target(format
+add_custom_target(test-format
 	COMMAND clang-format -i -style=file
 	agent-test.cpp
 	policykit-mock.h

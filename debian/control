@@ -1,0 +1,35 @@
+Source: unity8-policy-kit
+Section: gnome
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: click-dev,
+               cmake,
+               cmake-extras,
+               dbus,
+               dbus-test-runner,
+               debhelper (>= 9),
+               google-mock,
+               libdbustest1-dev,
+               libglib2.0-dev,
+               libgtest-dev,
+               libnotify-dev,
+               libpolkit-agent-1-dev,
+               python3-dbusmock,
+Standards-Version: 3.9.5
+Homepage: https://launchpad.net/unity8-policy-kit
+# If you aren't a member of ~indicator-applet-developers but need to upload
+# packaging changes, just go ahead.  ~indicator-applet-developers will notice
+# and sync up the code again.
+Vcs-Git: lp:unity8-policy-kit
+
+Package: unity8-policy-kit
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: service to prompt for policy kit permissions
+ Allows applications to request an item be paid for by the user.
+ This requires interaction with the server backend to handle the
+ payment provider and give that money to the developer. This service
+ coordinates the payment interaction with the server on the device.
+ .
+ This package provides a service for the Pay Service

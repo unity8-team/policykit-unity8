@@ -57,6 +57,6 @@ install(TARGETS policykit-agent
 # Format
 ###################
 
-add_custom_target(format
+add_custom_target(service-format
 	COMMAND clang-format -i -style=file ${LIBRARY_SOURCES} ${SERVICE_SOURCES}
 )
