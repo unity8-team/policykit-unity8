@@ -37,5 +37,14 @@ pkg_check_modules(NOTIFY REQUIRED libnotify)
 add_subdirectory(service)
 add_subdirectory(data)
 
-enable_testing()
+##
+## Testing
+##
+
+option (enable_tests "Build the package's automatic tests." ON)
+
+if (${enable_tests})
+  enable_testing()
+endif()
+
 add_subdirectory(tests)

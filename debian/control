@@ -13,6 +13,7 @@ Build-Depends: click-dev,
                libglib2.0-dev,
                libgtest-dev,
                libnotify-dev,
+               libproperties-cpp-dev,
                libpolkit-agent-1-dev,
                python3-dbusmock,
 Standards-Version: 3.9.5
