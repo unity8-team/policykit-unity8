@@ -23,6 +23,8 @@
 #include <csignal>
 #include <future>
 
+#include <glib.h>
+
 std::promise<int> retval;
 
 int main(int argc, char* argv[])
@@ -32,5 +34,6 @@ int main(int argc, char* argv[])
 
     std::signal(SIGTERM, [](int signal) -> void { retval.set_value(0); });
 
+    g_debug("PolicyKit Agent Started");
     return retval.get_future().get();
 }

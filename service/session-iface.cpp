@@ -27,8 +27,8 @@ public:
     PolkitAgentSession *session;
     bool sessionComplete;
 
-    Impl(const std::string &cookie)
-        : session(polkit_agent_session_new(nullptr, cookie.c_str()))
+    Impl(const std::string &identity, const std::string &cookie)
+        : session(polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str()))
         , sessionComplete(false)
     {
     }
@@ -86,8 +86,8 @@ public:
     }
 };
 
-Session::Session(const std::string &cookie)
-    : impl(std::make_shared<Impl>(cookie))
+Session::Session(const std::string &identity, const std::string &cookie)
+    : impl(std::make_shared<Impl>(identity, cookie))
 {
 }
 

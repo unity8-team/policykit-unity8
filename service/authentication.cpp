@@ -88,7 +88,8 @@ Authentication::Authentication(const std::string &action_id,
     /* Build a unique path */
     static unsigned int authentication_count = 0;
     auto thiscnt = ++authentication_count;
-    dbusPath = "/com/canonical/unity8-policy-kit/authentication" + std::to_string(thiscnt);
+    dbusPath = "/com/canonical/unity8/policykit/authentication" + std::to_string(thiscnt);
+    g_debug("DBus Path: %s", dbusPath.c_str());
 
     /* Setup Actions */
     _actions = shared_gobject<GSimpleActionGroup>(g_simple_action_group_new());
@@ -172,7 +173,8 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
 
 std::shared_ptr<Session> Authentication::buildSession(const std::string &identity, const std::string &cookie)
 {
-    auto session = std::make_shared<Session>(/*identity,*/ cookie);
+    g_debug("Building a new PK session");
+    auto session = std::make_shared<Session>(identity, cookie);
 
     session->request().connect([this](const std::string &prompt, bool password) { addRequest(prompt, password); });
 
@@ -205,6 +207,8 @@ void Authentication::showNotification()
     if (!_notification)
         return;
 
+    g_debug("Showing Notification");
+
     GError *error = nullptr;
     notify_notification_show(_notification.get(), &error);
     check_error(error, "Unable to show notification");
@@ -222,7 +226,8 @@ void Authentication::hideNotification()
 
     /* Clear the response */
     auto action = g_action_map_lookup_action(G_ACTION_MAP(_actions.get()), "response"); /* No transfer */
-    g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
+    if (action != nullptr)
+        g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
 }
 
 void Authentication::cancel()

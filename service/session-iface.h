@@ -24,7 +24,7 @@
 class Session
 {
 public:
-    Session(const std::string &cookie);
+    Session(const std::string &identity, const std::string &cookie);
     virtual ~Session();
 
     virtual void initiate();
