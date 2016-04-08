@@ -18,8 +18,7 @@ set(CMAKE_INSTALL_PKGLIBEXECDIR "${CMAKE_INSTALL_LIBEXECDIR}/${CMAKE_PROJECT_NAM
 set(CMAKE_INSTALL_FULL_PKGLIBEXECDIR "${CMAKE_INSTALL_FULL_LIBEXECDIR}/${CMAKE_PROJECT_NAME}")
 set(CMAKE_INSTALL_FULL_PKGDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${CMAKE_PROJECT_NAME}")
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -std=c++14 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -std=c++14 -pthread ${GCOV_FLAGS}")
 
 ##
 ## Pkgconfig
@@ -48,3 +47,22 @@ if (${enable_tests})
 endif()
 
 add_subdirectory(tests)
+
+##
+## Coverage
+##
+
+include(EnableCoverageReport)
+set(filter-list)
+list(APPEND filter-list "/usr")
+list(APPEND filter-list "${CMAKE_SOURCE_DIR}/tests")
+list(APPEND filter-list "${CMAKE_SOURCE_DIR}/service/glib-thread.*")
+if (NOT ${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+  list(APPEND filter-list "${CMAKE_BINARY_DIR}")
+endif()
+
+ENABLE_COVERAGE_REPORT(
+  TARGETS service-lib policykit-agent
+  TESTS agent-test
+  FILTER ${filter-list}
+)
