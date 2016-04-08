@@ -40,12 +40,31 @@ add_test (NAME agent-test
 )
 
 ##############
+# Authentication
+##############
+
+add_executable (authentication-test
+	authentication-test.cpp
+)
+
+target_link_libraries(authentication-test
+	gmock_main
+	service-lib
+	${DBUSTEST_LIBRARIES}
+)
+
+add_test (NAME authentication-test
+	COMMAND authentication-test
+)
+
+##############
 # Formatting
 ##############
 
 add_custom_target(test-format
 	COMMAND clang-format -i -style=file
 	agent-test.cpp
+	authentication-test.cpp
 	policykit-mock.h
 	notifications-mock.h
 )

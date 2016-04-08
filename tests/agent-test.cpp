@@ -17,7 +17,6 @@
  *     Ted Gould <ted.gould@canonical.com>
  */
 
-
 /* Test Libraries */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

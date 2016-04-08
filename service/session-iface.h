@@ -21,6 +21,8 @@
 #include <memory>
 #include <string>
 
+#pragma once
+
 class Session
 {
 public:
@@ -35,6 +37,11 @@ public:
     virtual core::Signal<const std::string &> &info();
     virtual core::Signal<const std::string &> &error();
     virtual core::Signal<bool> &complete();
+
+protected:
+    Session()
+    {
+    }
 
 private:
     class Impl;
