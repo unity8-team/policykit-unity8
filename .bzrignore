@@ -8,9 +8,12 @@ service/cmake_install.cmake
 service/libservice-lib.a
 service/policykit-agent
 tests/agent-test
+tests/authentication-test
 tests/gmock/
 tests/libgtest.a
 CTestTestfile.cmake
 Testing/
 tests/CTestTestfile.cmake
 data/unity8-policy-kit.conf
+xml/
+docs/_build/*
