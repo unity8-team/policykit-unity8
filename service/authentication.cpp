@@ -93,12 +93,13 @@ Authentication::Authentication(const std::string &action_id,
 
     /* Setup Actions */
     _actions = shared_gobject<GSimpleActionGroup>(g_simple_action_group_new());
+    auto pwaction =
+        shared_gobject<GSimpleAction>(g_simple_action_new_stateful("response", nullptr, g_variant_new_string("")));
+    g_action_map_add_action(G_ACTION_MAP(_actions.get()), G_ACTION(pwaction.get()));
+
     _actionsExport = g_dbus_connection_export_action_group(_sessionBus.get(), dbusPath.c_str(),
                                                            G_ACTION_GROUP(_actions.get()), &error);
     check_error(error, "Unable to export actions");
-
-    auto pwaction = shared_gobject<GSimpleAction>(g_simple_action_new("response", G_VARIANT_TYPE_STRING));
-    g_action_map_add_action(G_ACTION_MAP(_actions.get()), G_ACTION(pwaction.get()));
 
     /* Setup Menus */
     _menus = shared_gobject<GMenu>(g_menu_new());
@@ -128,9 +129,9 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
         throw std::runtime_error("Unable to setup notification object");
 
     notify_notification_set_timeout(notification.get(), NOTIFY_EXPIRES_NEVER);
-    notify_notification_add_action(notification.get(), "cancel", "Cancel", notification_action_cancel, this,
-                                   nullptr); /* free func */
     notify_notification_add_action(notification.get(), "okay", "Login", notification_action_response, this,
+                                   nullptr); /* free func */
+    notify_notification_add_action(notification.get(), "cancel", "Cancel", notification_action_cancel, this,
                                    nullptr); /* free func */
 
     g_signal_connect(notification.get(), "closed", G_CALLBACK(notification_closed), this);
@@ -157,7 +158,7 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
     g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
     g_variant_builder_open(&builder, G_VARIANT_TYPE("{sv}"));
-    g_variant_builder_add_value(&builder, g_variant_new_string(""));
+    g_variant_builder_add_value(&builder, g_variant_new_string("pk"));
     g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
     g_variant_builder_add_value(&builder, g_variant_new_string(dbusPath.c_str()));
     g_variant_builder_close(&builder);
@@ -196,6 +197,8 @@ std::shared_ptr<Session> Authentication::buildSession(const std::string &identit
         }
     });
 
+    session->initiate();
+
     return session;
 }
 
@@ -226,12 +229,13 @@ void Authentication::hideNotification()
 
     /* Clear the response */
     auto action = g_action_map_lookup_action(G_ACTION_MAP(_actions.get()), "response"); /* No transfer */
-    if (action != nullptr)
+    if (action != nullptr && G_IS_SIMPLE_ACTION(action))
         g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
 }
 
 void Authentication::cancel()
 {
+    g_debug("Notification Cancelled");
     hideNotification();
     issueCallback(Authentication::State::CANCELLED);
 }
@@ -243,12 +247,14 @@ void Authentication::checkResponse()
     std::string response(g_variant_get_string(vresponse, nullptr));
     g_variant_unref(vresponse);
 
+    g_debug("Notification response: %s", response.c_str());
+
     hideNotification();
 
     _session->requestResponse(response);
 }
 
-int findMenuItem(std::shared_ptr<GMenu> menu, const std::string &type, const std::string &value)
+int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const std::string &value)
 {
     int index = -1;
     for (int i = 0; i < g_menu_model_get_n_items(G_MENU_MODEL(menu.get())); i++)
@@ -337,7 +343,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     int index = findMenuItem(_menus, "x-canonical-type", "com.canonical.snapdecision.textfield");
 
     std::string label;
-    if (request == "password:")
+    if (request == "password:" || request == "Password:")
     {
         label = "Password";  // TODO: Add Username
     }
@@ -349,7 +355,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     if (index == -1)
     {
         /* Build it */
-        auto item = shared_gobject<GMenuItem>(g_menu_item_new(label.c_str(), "response"));
+        auto item = shared_gobject<GMenuItem>(g_menu_item_new(label.c_str(), "pk.response"));
         g_menu_item_set_attribute_value(item.get(), "x-canonical-type",
                                         g_variant_new_string("com.canonical.snapdecision.textfield"));
         g_menu_append_item(_menus.get(), item.get());

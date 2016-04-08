@@ -52,18 +52,21 @@ public:
 
     static void requestCb(PolkitAgentSession *session, const gchar *text, gboolean password, gpointer user_data)
     {
+        g_debug("PK Session Request: %s", text);
         auto obj = reinterpret_cast<Impl *>(user_data);
         obj->request(text, password == TRUE);
     }
 
     static void infoCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
     {
+        g_debug("PK Session Info: %s", text);
         auto obj = reinterpret_cast<Impl *>(user_data);
         obj->info(text);
     }
 
     static void errorCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
     {
+        g_debug("PK Session Error: %s", text);
         auto obj = reinterpret_cast<Impl *>(user_data);
         obj->error(text);
     }
