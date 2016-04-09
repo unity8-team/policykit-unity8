@@ -9,6 +9,7 @@ service/libservice-lib.a
 service/policykit-agent
 tests/agent-test
 tests/authentication-test
+tests/auth-manager-test
 tests/gmock/
 tests/libgtest.a
 CTestTestfile.cmake

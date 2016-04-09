@@ -63,6 +63,6 @@ endif()
 
 ENABLE_COVERAGE_REPORT(
   TARGETS service-lib policykit-agent
-  TESTS agent-test
+  TESTS agent-test authentication-test auth-manager-test
   FILTER ${filter-list}
 )

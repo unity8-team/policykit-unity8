@@ -40,6 +40,24 @@ add_test (NAME agent-test
 )
 
 ##############
+# AuthManager
+##############
+
+add_executable (auth-manager-test
+	auth-manager-test.cpp
+)
+
+target_link_libraries(auth-manager-test
+	gmock_main
+	service-lib
+	${DBUSTEST_LIBRARIES}
+)
+
+add_test (NAME auth-manager-test
+	COMMAND auth-manager-test
+)
+
+##############
 # Authentication
 ##############
 
@@ -64,6 +82,7 @@ add_test (NAME authentication-test
 add_custom_target(test-format
 	COMMAND clang-format -i -style=file
 	agent-test.cpp
+	auth-manager-test.cpp
 	authentication-test.cpp
 	policykit-mock.h
 	notifications-mock.h

@@ -19,6 +19,7 @@
 
 #include "agent.h"
 #include "auth-manager.h"
+#include "authentication.h"
 
 #include <csignal>
 #include <future>

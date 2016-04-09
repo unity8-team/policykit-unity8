@@ -78,6 +78,8 @@ ContextThread::ContextThread(std::function<void()> beforeLoop, std::function<voi
 
 ContextThread::~ContextThread()
 {
+    if (!isCancelled())
+        runQueuedJobs();
     quit();
 }
 
@@ -151,6 +153,14 @@ void ContextThread::timeout(const std::chrono::milliseconds& length, std::functi
 void ContextThread::timeoutSeconds(const std::chrono::seconds& length, std::function<void()> work)
 {
     simpleSource([length]() { return g_timeout_source_new_seconds(length.count()); }, work);
+}
+
+void ContextThread::runQueuedJobs()
+{
+    while (g_main_context_pending(_context.get()))
+    {
+        g_main_context_iteration(_context.get(), FALSE);
+    }
 }
 
 }  // ns GLib

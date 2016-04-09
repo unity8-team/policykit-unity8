@@ -57,6 +57,7 @@ AuthManager::~AuthManager()
         {
             /* Use a while because we modify the list internally */
             cancelAuthentication((*inFlight.begin()).first);
+            thread.runQueuedJobs();
         }
 
         /* Uninitialize libnotify for the system */
@@ -75,11 +76,9 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
     return thread.executeOnThread<std::string>([this, &action_id, &message, &icon_name, &cookie, &identities,
                                                 &finishedCallback]() {
         /* Build the authentication object */
-        auto auth = std::make_shared<Authentication>(
+        auto auth = buildAuthentication(
             action_id, message, icon_name, cookie, identities,
             [this, cookie, finishedCallback](Authentication::State state) {
-                /* Put the remove on the idle stack for the mainloop so that the
-                   callback can get processed before we drop our reference */
                 this->thread.timeout(std::chrono::hours{0},
                                      [this, cookie]() {
                                          auto entry = inFlight.find(cookie);
@@ -104,12 +103,28 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
     });
 }
 
+std::shared_ptr<Authentication> AuthManager::buildAuthentication(
+    const std::string &action_id,
+    const std::string &message,
+    const std::string &icon_name,
+    const std::string &cookie,
+    const std::list<std::string> &identities,
+    const std::function<void(Authentication::State)> &finishedCallback)
+{
+    return std::make_shared<Authentication>(
+
+        action_id, message, icon_name, cookie, identities, finishedCallback);
+}
+
 bool AuthManager::cancelAuthentication(const std::string &handle)
 {
     return thread.executeOnThread<bool>([this, &handle]() {
         auto entry = inFlight.find(handle);
         if (entry == inFlight.end())
+        {
+            g_debug("Unable to find authentication '%s' to cancel", handle.c_str());
             return false;
+        }
 
         /* This should change the state which will cause it to be
            dropped from the inFlight map */

@@ -76,6 +76,8 @@ public:
         return timeoutSeconds(std::chrono::duration_cast<std::chrono::seconds>(length), work);
     }
 
+    void runQueuedJobs(void);
+
 private:
     void simpleSource(std::function<GSource*()> srcBuilder, std::function<void()> work);
 };

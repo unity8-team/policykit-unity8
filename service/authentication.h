@@ -77,9 +77,9 @@ private:
     std::function<void(State)> _finishedCallback;
 
     /* Internal State */
-    bool _callbackSent;
-    guint _actionsExport;
-    guint _menusExport;
+    bool _callbackSent = false;
+    guint _actionsExport = 0;
+    guint _menusExport = 0;
 
     /* Stuff we build */
     std::string dbusPath;
@@ -89,4 +89,9 @@ private:
     std::shared_ptr<GMenu> _menus;
 
     std::shared_ptr<Session> _session;
+
+protected:
+    Authentication()
+    {
+    } /* For test mocks */
 };

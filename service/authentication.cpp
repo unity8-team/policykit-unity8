@@ -75,9 +75,6 @@ Authentication::Authentication(const std::string &action_id,
     , _cookie(cookie)
     , _identities(identities)
     , _finishedCallback(finishedCallback)
-    , _callbackSent(false)
-    , _actionsExport(0)
-    , _menusExport(0)
 {
     GError *error = nullptr;
 
@@ -116,8 +113,10 @@ Authentication::~Authentication()
        complete message to the creator */
     cancel();
 
-    g_dbus_connection_unexport_menu_model(_sessionBus.get(), _menusExport);
-    g_dbus_connection_unexport_action_group(_sessionBus.get(), _actionsExport);
+    if (_menusExport != 0)
+        g_dbus_connection_unexport_menu_model(_sessionBus.get(), _menusExport);
+    if (_actionsExport != 0)
+        g_dbus_connection_unexport_action_group(_sessionBus.get(), _actionsExport);
 }
 
 std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
@@ -225,12 +224,16 @@ void Authentication::hideNotification()
     _notification.reset();
 
     /* Clear the menu */
-    g_menu_remove_all(G_MENU(_menus.get()));
+    if (_menus)
+        g_menu_remove_all(G_MENU(_menus.get()));
 
     /* Clear the response */
-    auto action = g_action_map_lookup_action(G_ACTION_MAP(_actions.get()), "response"); /* No transfer */
-    if (action != nullptr && G_IS_SIMPLE_ACTION(action))
-        g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
+    if (_actions)
+    {
+        auto action = g_action_map_lookup_action(G_ACTION_MAP(_actions.get()), "response"); /* No transfer */
+        if (action != nullptr && G_IS_SIMPLE_ACTION(action))
+            g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
+    }
 }
 
 void Authentication::cancel()
@@ -382,6 +385,10 @@ void Authentication::issueCallback(Authentication::State state)
     if (_callbackSent)
         return;
 
-    _finishedCallback(state);
+    /* Check to ensure we were given a valid callback
+       and then call it. */
+    if (_finishedCallback)
+        _finishedCallback(state);
+
     _callbackSent = true;
 }
