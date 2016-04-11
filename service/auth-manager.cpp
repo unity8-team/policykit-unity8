@@ -24,7 +24,7 @@
 
 AuthManager::AuthManager()
 {
-    thread.executeOnThread([]() {
+    auto success = thread.executeOnThread<bool>([]() {
         /* Initialize Libnotify */
         auto initsuccess = notify_init("unity8-policy-kit");
 
@@ -44,9 +44,16 @@ AuthManager::AuthManager()
         g_list_free_full(caps, g_free);
 
         if (!hasDialogs)
+        {
+            notify_uninit();
             throw std::runtime_error("Notification server doesn't have the capability to show dialogs!");
+        }
 
+        return true;
     });
+
+    if (success)
+        g_debug("Authentication Manager initialized");
 }
 
 AuthManager::~AuthManager()
