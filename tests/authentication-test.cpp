@@ -31,6 +31,7 @@
 
 /* System Libs */
 #include <chrono>
+#include <libnotify/notify.h>
 #include <thread>
 
 class AuthenticationTest : public ::testing::Test
@@ -70,10 +71,16 @@ protected:
         ASSERT_NE(nullptr, session);
         g_dbus_connection_set_exit_on_close(session, FALSE);
         g_object_add_weak_pointer(G_OBJECT(session), (gpointer *)&session);
+
+        /* Normally done by Auth Manager */
+        notify_init("authentication-test");
     }
 
     virtual void TearDown()
     {
+        /* Normally done by Auth Manager */
+        notify_uninit();
+
         notifications.reset();
 
         g_clear_object(&session_service);
@@ -111,34 +118,39 @@ class SessionMock : public Session
 public:
     std::string _identity;
     std::string _cookie;
+    bool _initiated;
 
     SessionMock(const std::string &identity, const std::string &cookie)
         : _identity(identity)
         , _cookie(cookie)
+        , _initiated(false)
     {
     }
 
-    MOCK_METHOD0(initiate, void(void));
+    void initiate() override
+    {
+        _initiated = true;
+    }
 
-    core::Signal<const std::string &, bool> &request()
+    core::Signal<const std::string &, bool> &request() override
     {
         return _request;
     }
     core::Signal<const std::string &, bool> _request;
 
-    core::Signal<const std::string &> &info()
+    core::Signal<const std::string &> &info() override
     {
         return _info;
     }
     core::Signal<const std::string &> _info;
 
-    core::Signal<const std::string &> &error()
+    core::Signal<const std::string &> &error() override
     {
         return _error;
     }
     core::Signal<const std::string &> _error;
 
-    core::Signal<bool> &complete()
+    core::Signal<bool> &complete() override
     {
         return _complete;
     }
@@ -158,11 +170,18 @@ public:
                               const std::function<void(State)> &finishedCallback)
         : Authentication(action_id, message, icon_name, cookie, identities, finishedCallback)
     {
+        g_debug("Building Authentication object with Session Mock");
     }
 
-    std::shared_ptr<Session> buildSession(const std::string &identity, const std::string &cookie)
+    std::weak_ptr<SessionMock> lastSession;
+
+protected:
+    std::shared_ptr<Session> buildSession(const std::string &identity, const std::string &cookie) override
     {
-        return std::make_shared<SessionMock>(identity, cookie);
+        g_debug("Building a Mock session: %s, %s", identity.c_str(), cookie.c_str());
+        auto session = std::make_shared<SessionMock>(identity, cookie);
+        lastSession = session;
+        return session;
     }
 };
 
@@ -170,4 +189,66 @@ TEST_F(AuthenticationTest, Init)
 {
     AuthenticationSessionMock auth("action-id", "message", "icon-name", "everyone-loves-cookies", {"unix-name:me"},
                                    [](Authentication::State state) { return; });
+    auth.start();
+
+    ASSERT_FALSE(auth.lastSession.expired());
+    EXPECT_EQ("unix-name:me", auth.lastSession.lock()->_identity);
+    EXPECT_EQ("everyone-loves-cookies", auth.lastSession.lock()->_cookie);
+}
+
+TEST_F(AuthenticationTest, Cancel)
+{
+    Authentication::State cbState;
+    bool cbCalled = false;
+
+    AuthenticationSessionMock auth("action-id", "message", "icon-name", "everyone-loves-cookies", {"unix-name:me"},
+                                   [&cbState, &cbCalled](Authentication::State state) {
+                                       cbState = state;
+                                       cbCalled = true;
+                                   });
+
+    auth.cancel();
+    loop(10);
+
+    EXPECT_TRUE(cbCalled);
+    EXPECT_EQ(Authentication::State::CANCELLED, cbState);
+}
+
+TEST_F(AuthenticationTest, BasicRequest)
+{
+    AuthenticationSessionMock auth("action-id", "message", "icon-name", "everyone-loves-cookies", {"unix-name:me"},
+                                   [](Authentication::State state) {});
+    auth.start();
+
+    auth.setInfo("some info");
+    auth.addRequest("password:", true);
+
+    auto dialogs = notifications->getNotifications();
+
+    EXPECT_EQ(1, dialogs.size());
+
+    /* Base Notification */
+    EXPECT_EQ("authentication-test", dialogs[0].app_name);
+    EXPECT_EQ("icon-name", dialogs[0].app_icon);
+    EXPECT_EQ("message", dialogs[0].body);
+    EXPECT_EQ(0, dialogs[0].timeout);
+
+    /* Actions */
+    EXPECT_EQ(4, dialogs[0].actions.size());
+    EXPECT_EQ("okay", dialogs[0].actions[0]);
+    EXPECT_EQ("Login", dialogs[0].actions[1]);
+    EXPECT_EQ("cancel", dialogs[0].actions[2]);
+    EXPECT_EQ("Cancel", dialogs[0].actions[3]);
+
+    /* Hints */
+    EXPECT_EQ(2, dialogs[0].hints.size());
+    EXPECT_NE(dialogs[0].hints.end(), dialogs[0].hints.find("x-canonical-snap-decisions"));
+    EXPECT_NE(dialogs[0].hints.end(), dialogs[0].hints.find("x-canonical-private-menu-model"));
+
+    /* Setup callback */
+    ASSERT_FALSE(auth.lastSession.expired());
+    EXPECT_CALL(*(auth.lastSession.lock()), requestResponse("")).WillOnce(testing::Return());
+
+    notifications->emitAction("okay");
+    loop(50);
 }

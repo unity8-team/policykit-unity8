@@ -103,8 +103,6 @@ Authentication::Authentication(const std::string &action_id,
     _menusExport =
         g_dbus_connection_export_menu_model(_sessionBus.get(), dbusPath.c_str(), G_MENU_MODEL(_menus.get()), &error);
     check_error(error, "Unable to export menu model");
-
-    _session = buildSession(*identities.begin(), cookie);
 }
 
 Authentication::~Authentication()
@@ -117,6 +115,11 @@ Authentication::~Authentication()
         g_dbus_connection_unexport_menu_model(_sessionBus.get(), _menusExport);
     if (_actionsExport != 0)
         g_dbus_connection_unexport_action_group(_sessionBus.get(), _actionsExport);
+}
+
+void Authentication::start(void)
+{
+    _session = buildSession(*_identities.begin(), _cookie);
 }
 
 std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)

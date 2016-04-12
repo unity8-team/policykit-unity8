@@ -128,6 +128,11 @@ public:
         _finishedCallback(Authentication::State::CANCELLED);
     }
 
+    virtual void start() override
+    {
+        g_debug("Starting Mock authentication");
+    }
+
     std::string _action_id;
     std::string _message;
     std::string _icon_name;

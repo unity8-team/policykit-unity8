@@ -171,4 +171,24 @@ public:
     {
         return dbus_test_dbus_mock_object_clear_method_calls(mock, baseobj, nullptr);
     }
+
+    enum class CloseReason : std::uint32_t
+    {
+        EXPIRED = 1, /* timeout */
+        USER = 2,    /* user action closed it */
+        DBUS = 3,    /* Dbus call to close */
+        OTHER = 4,   /* Something else */
+    };
+
+    bool emitClosed(std::uint32_t number = 10, CloseReason reason = CloseReason::USER)
+    {
+        return dbus_test_dbus_mock_object_emit_signal(mock, baseobj, "NotificationClosed", G_VARIANT_TYPE("(uu)"),
+                                                      g_variant_new("(uu)", number, reason), nullptr) == TRUE;
+    }
+
+    bool emitAction(const std::string& key, std::uint32_t number = 10)
+    {
+        return dbus_test_dbus_mock_object_emit_signal(mock, baseobj, "ActionInvoked", G_VARIANT_TYPE("(us)"),
+                                                      g_variant_new("(us)", number, key.c_str()), nullptr) == TRUE;
+    }
 };

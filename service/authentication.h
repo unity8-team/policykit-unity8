@@ -47,18 +47,19 @@ public:
                    const std::function<void(State)> &finishedCallback);
     virtual ~Authentication();
 
+    virtual void start();
     virtual void cancel();
     virtual void checkResponse();
-
-protected:
-    /* Build Functions */
-    virtual std::shared_ptr<NotifyNotification> buildNotification(void);
-    virtual std::shared_ptr<Session> buildSession(const std::string &identity, const std::string &cookie);
 
     /* Update Functions */
     virtual void setInfo(const std::string &info);
     virtual void setError(const std::string &error);
     virtual void addRequest(const std::string &request, bool password);
+
+protected:
+    /* Build Functions */
+    virtual std::shared_ptr<NotifyNotification> buildNotification(void);
+    virtual std::shared_ptr<Session> buildSession(const std::string &identity, const std::string &cookie);
 
     /* Notification Control */
     virtual void showNotification();

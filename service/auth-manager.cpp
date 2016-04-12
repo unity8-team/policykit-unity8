@@ -106,6 +106,8 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
         /* Throw it in our queue */
         inFlight[cookie] = auth;
 
+        auth->start();
+
         return cookie;
     });
 }
