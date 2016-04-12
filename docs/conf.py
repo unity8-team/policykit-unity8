@@ -38,13 +38,14 @@ subprocess.call('cd .. ; doxygen docs/Doxyfile', shell=True)
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.graphviz',
     'sphinx.ext.todo',
     'breathe'
 ]
 
 # Breathe projects
-breathe_projects = { 'libubuntu-app-launch': '../xml/' }
-breathe_default_project = 'libubuntu-app-launch'
+breathe_projects = { 'service': '../xml/' }
+breathe_default_project = 'service'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

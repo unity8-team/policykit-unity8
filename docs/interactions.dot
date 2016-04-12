@@ -1,0 +1,21 @@
+digraph interactions {
+	pk [label="Policy\nKit"];
+	agent [label="Agent"];
+	authman [label="Authorization\nManager"];
+	auth [label="Authorization"];
+	u8 [label="Unity 8"];
+	session [label="PAM Session"];
+
+	pk -> agent [label="Requests\nAuth Check"];
+	agent -> authman [label="Create\nAuthentication"];
+	authman -> auth [label="Manage"];
+
+	auth -> session [label="Create\nSession"];
+	session -> auth [label="Request\nInformation"];
+	auth -> u8 [label="Create\nSnap Decision"];
+	u8 -> auth [label="User\nInput"];
+	auth -> session [label="User\nInput"];
+
+	session -> pk [label="Auth\nSucceeded"];
+	session -> auth [label="Auth\nFailed"];
+}
