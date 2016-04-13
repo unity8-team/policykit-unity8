@@ -35,6 +35,7 @@ pkg_check_modules(NOTIFY REQUIRED libnotify)
 
 add_subdirectory(service)
 add_subdirectory(data)
+add_subdirectory(po)
 
 ##
 ## Testing

@@ -1,0 +1,13 @@
+service/agent.cpp
+service/agent-glib.cpp
+service/agent-glib.h
+service/agent.h
+service/authentication.cpp
+service/authentication.h
+service/auth-manager.cpp
+service/auth-manager.h
+service/glib-thread.cpp
+service/glib-thread.h
+service/main.cpp
+service/session-iface.cpp
+service/session-iface.h

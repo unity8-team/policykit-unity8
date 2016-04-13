@@ -20,6 +20,7 @@
 #include "authentication.h"
 
 #include <iostream>
+#include <glib/gi18n.h>
 
 /* Make it so all our GObjects are easier to work with */
 template <typename T>
@@ -131,14 +132,14 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
 {
     /* Build our notification */
     auto notification = shared_gobject<NotifyNotification>(
-        notify_notification_new("Elevated permissions required", _message.c_str(), _icon_name.c_str()));
+        notify_notification_new(_("Elevated permissions required"), _message.c_str(), _icon_name.c_str()));
     if (!notification)
         throw std::runtime_error("Unable to setup notification object");
 
     notify_notification_set_timeout(notification.get(), NOTIFY_EXPIRES_NEVER);
-    notify_notification_add_action(notification.get(), "okay", "Login", notification_action_response, this,
+    notify_notification_add_action(notification.get(), "okay", _("Login"), notification_action_response, this,
                                    nullptr); /* free func */
-    notify_notification_add_action(notification.get(), "cancel", "Cancel", notification_action_cancel, this,
+    notify_notification_add_action(notification.get(), "cancel", _("Cancel"), notification_action_cancel, this,
                                    nullptr); /* free func */
 
     g_signal_connect(notification.get(), "closed", G_CALLBACK(notification_closed), this);
@@ -382,7 +383,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     std::string label;
     if (request == "password:" || request == "Password:")
     {
-        label = "Password";  // TODO: Add Username (Password for Joe)
+        label = _("Password");  // TODO: Add Username (Password for Joe)
     }
     else
     {
