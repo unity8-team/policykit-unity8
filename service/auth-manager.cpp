@@ -38,7 +38,7 @@ AuthManager::AuthManager()
         {
             auto capname = reinterpret_cast<const gchar *>(cap->data);
 
-            if (std::string(capname) == "x-canonical-private-synchronous")  // TODO: Lookup name
+            if (std::string(capname) == "x-canonical-private-synchronous")
                 hasDialogs = true;
         }
         g_list_free_full(caps, g_free);
@@ -73,6 +73,20 @@ AuthManager::~AuthManager()
     });
 }
 
+/** \brief Starts an Authentication
+        \param action_id Type of action from PolicyKit
+        \param message Message to show to the user
+        \param icon_name Icon to show with the notification
+        \param cookie Unique string to track the authentication
+        \param identities Identities that can be used to authenticate this action
+        \param finishedCallback Function to call when the user has completed the authorization
+
+        Creates the authentication object on the notification thread
+        using the buildAuthentication function. It also creates a more
+        complex callback where, when the callback is called it also removes
+        this authentication from the inFlight map which is tracking
+        Authentication objects.
+*/
 std::string AuthManager::createAuthentication(const std::string &action_id,
                                               const std::string &message,
                                               const std::string &icon_name,
@@ -112,6 +126,8 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
     });
 }
 
+/** The actual call to create the object, split out so that it can
+    be replaced in the test suite with a mock. */
 std::shared_ptr<Authentication> AuthManager::buildAuthentication(
     const std::string &action_id,
     const std::string &message,
@@ -125,6 +141,9 @@ std::shared_ptr<Authentication> AuthManager::buildAuthentication(
         action_id, message, icon_name, cookie, identities, finishedCallback);
 }
 
+/** Cancels an Authentication that is currently running.
+    \param handle the handle of the Authentication object
+*/
 bool AuthManager::cancelAuthentication(const std::string &handle)
 {
     return thread.executeOnThread<bool>([this, &handle]() {

@@ -77,9 +77,18 @@ Agent::~Agent()
     });
 }
 
-/* This is where an auth request comes to us from PolicyKit. Here we handle
-   the cancellables and get a handle from the auth manager for cancelling the
-   authentication. */
+/** This is where an auth request comes to us from PolicyKit. Here we handle
+        the cancellables and get a handle from the auth manager for cancelling the
+        authentication.
+
+        \param action_id Type of action from PolicyKit
+        \param message Message to show to the user
+        \param icon_name Icon to show with the notification
+        \param cookie Unique string to track the authentication
+        \param identities Identities that can be used to authenticate this action
+        \param cancellable Object to notify when we need to cancel the authentication
+        \param callback Function to call when the user has completed the authorization
+*/
 void Agent::authRequest(std::string action_id,
                         std::string message,
                         std::string icon_name,
@@ -111,21 +120,21 @@ void Agent::authRequest(std::string action_id,
                                        });
 }
 
-/* Static function to do the cancel */
+/** Static function to do the cancel */
 void Agent::cancelStatic(GCancellable *cancel, gpointer user_data)
 {
     auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(user_data);
     pair->first->_authmanager->cancelAuthentication(pair->second);
 }
 
-/* Static function to clean up the data needed for cancelling */
+/** Static function to clean up the data needed for cancelling */
 void Agent::cancelCleanup(gpointer data)
 {
     auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(data);
     delete pair;
 }
 
-/* Disconnect from the g_cancellable */
+/** Disconnect from the g_cancellable */
 void Agent::unregisterCancellable(std::string handle)
 {
     g_debug("Unregistering cancellable authorization: %s", handle.c_str());

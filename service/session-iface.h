@@ -23,6 +23,14 @@
 
 #pragma once
 
+/** \brief An interface for the session functionality of libpolicykitagent
+        so that we can mock it out.
+
+    It is basically impossible to test against PAM without going
+    crazy, so we created an interface to mock it out. This class
+    makes the session interface into nice C++ objects but also
+    virtualizes it so that it can be mocked.
+*/
 class Session
 {
 public:
@@ -45,5 +53,6 @@ protected:
 
 private:
     class Impl;
+    /** Someone should implement this */
     std::shared_ptr<Impl> impl;
 };

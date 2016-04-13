@@ -21,10 +21,19 @@
 
 #include <polkitagent/polkitagent.h>
 
+/** \brief Implementation of the Session class
+
+    This implementation wraps up the PolkitAgentSession object with
+    some static functions that get turned into core::signal's. It
+    also aligns its lifecycle with the GObject one.
+*/
 class Session::Impl
 {
 public:
+    /** GObject based session object that we're wrapping */
     PolkitAgentSession *session;
+    /** A sentinal to say whether complete has been signaled, if not
+        we need to cancel before unref'ing the session. */
     bool sessionComplete;
 
     Impl(const std::string &identity, const std::string &cookie)
@@ -40,16 +49,26 @@ public:
         g_clear_object(&session);
     }
 
+    /** Signal from the session that requests information from the user.
+        Includes the text to be shown and whether it is a password or not. */
     core::Signal<const std::string &, bool> request;
+    /** Signal from the session that includes info to show to the user */
     core::Signal<const std::string &> info;
+    /** Signal from the session that includes an error to show to the user */
     core::Signal<const std::string &> error;
+    /** Signal from the session that says the session is complete, a boolean
+        for whether it was successful or not. */
     core::Signal<bool> complete;
 
+    /** Sends a response to the Polkit Session.
+        \param response Text response from the user */
     void requestResponse(const std::string &response)
     {
         polkit_agent_session_response(session, response.c_str());
     }
 
+    /** Static callback for the request signal. Passed up to the
+        request C++ signal. */
     static void requestCb(PolkitAgentSession *session, const gchar *text, gboolean password, gpointer user_data)
     {
         g_debug("PK Session Request: %s", text);
@@ -57,6 +76,8 @@ public:
         obj->request(text, password == TRUE);
     }
 
+    /** Static callback for the info signal. Passed up to the
+        info C++ signal. */
     static void infoCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
     {
         g_debug("PK Session Info: %s", text);
@@ -64,6 +85,8 @@ public:
         obj->info(text);
     }
 
+    /** Static callback for the error signal. Passed up to the
+        error C++ signal. */
     static void errorCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
     {
         g_debug("PK Session Error: %s", text);
@@ -71,6 +94,9 @@ public:
         obj->error(text);
     }
 
+    /** Static callback for the complete signal. Passed up to the
+        complete C++ signal. Also sets the session complete flag
+        which ensures we don't cancel on destruction. */
     static void completeCb(PolkitAgentSession *session, bool success, gpointer user_data)
     {
         auto obj = reinterpret_cast<Impl *>(user_data);
@@ -78,6 +104,7 @@ public:
         obj->complete(success == TRUE);
     }
 
+    /** Internal implementation functions don't have to have good names */
     void go()
     {
         g_signal_connect(G_OBJECT(session), "request", G_CALLBACK(requestCb), this);
@@ -98,31 +125,39 @@ Session::~Session()
 {
 }
 
+/** Starts the session so that signals start flowing */
 void Session::initiate()
 {
     return impl->go();
 }
 
+/** Gets the request signal so that it can be connected to. */
 core::Signal<const std::string &, bool> &Session::request()
 {
     return impl->request;
 }
 
+/** Returns a response from the user to the session.
+    \param response Text response
+*/
 void Session::requestResponse(const std::string &response)
 {
     return impl->requestResponse(response);
 }
 
+/** Gets the info signal so that it can be connected to. */
 core::Signal<const std::string &> &Session::info()
 {
     return impl->info;
 }
 
+/** Gets the error signal so that it can be connected to. */
 core::Signal<const std::string &> &Session::error()
 {
     return impl->error;
 }
 
+/** Gets the complete signal so that it can be connected to. */
 core::Signal<bool> &Session::complete()
 {
     return impl->complete;

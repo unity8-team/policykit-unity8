@@ -3,11 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Unity8 Policy Kit Agent's documentation!
-=============================================
-
-Contents:
-
 .. toctree::
    :maxdepth: 2
 

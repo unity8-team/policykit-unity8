@@ -117,11 +117,16 @@ Authentication::~Authentication()
         g_dbus_connection_unexport_action_group(_sessionBus.get(), _actionsExport);
 }
 
+/** Used to start the session working, split out from the constructor
+    so that we can separate the two in the test suite. */
 void Authentication::start(void)
 {
+    /** TODO: We should have an identity selector, not a requirement yet. */
     _session = buildSession(*_identities.begin(), _cookie);
 }
 
+/** Build the notification object along with all the hints that are
+    required to be rather complex GVariants. */
 std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
 {
     /* Build our notification */
@@ -174,6 +179,13 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     return notification;
 }
 
+/** Builds a session object from an identity and a cookie. After building
+    it connects to all the signals and passes their calls to the appropriate
+    function on the Authentication object.
+
+    \param identity A PK identity string
+    \param cookie An unique identifier for this authentication
+*/
 std::shared_ptr<Session> Authentication::buildSession(const std::string &identity, const std::string &cookie)
 {
     g_debug("Building a new PK session");
@@ -204,6 +216,8 @@ std::shared_ptr<Session> Authentication::buildSession(const std::string &identit
     return session;
 }
 
+/** Show a notification to the user, may include building it if it
+    has been built previously. */
 void Authentication::showNotification()
 {
     if (!_notification)
@@ -219,6 +233,9 @@ void Authentication::showNotification()
     check_error(error, "Unable to show notification");
 }
 
+/** Hide a notification. This includes closing it if open and free'ing
+    the _notification variable. It also will reset the response action
+    and remove all the items from the menu. */
 void Authentication::hideNotification()
 {
     /* Close the notification */
@@ -239,6 +256,8 @@ void Authentication::hideNotification()
     }
 }
 
+/** Cancel the authentication. Hide the notification if visiable and call
+    the callback. */
 void Authentication::cancel()
 {
     g_debug("Notification Cancelled");
@@ -246,6 +265,8 @@ void Authentication::cancel()
     issueCallback(Authentication::State::CANCELLED);
 }
 
+/** Checks the response from the user by looking at the response action and
+    then passes the value to the Session object */
 void Authentication::checkResponse()
 {
     /* Get the password */
@@ -260,6 +281,7 @@ void Authentication::checkResponse()
     _session->requestResponse(response);
 }
 
+/** Find a menu item in a menu that has a specific value on an attribute */
 int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const std::string &value)
 {
     int index = -1;
@@ -284,6 +306,9 @@ int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const st
     return index;
 }
 
+/** Set the info string to show the user. If there is no info menu item
+    then one is created for the information. If there is currently one it
+    will be updated to be the new string */
 void Authentication::setInfo(const std::string &info)
 {
     int index = findMenuItem(_menus, "x-canonical-unity8-policy-kit-type", "info");
@@ -307,6 +332,9 @@ void Authentication::setInfo(const std::string &info)
     g_menu_prepend_item(_menus.get(), item.get());
 }
 
+/** Set the error string to show the user. If there is no error menu item
+    then one is created for the information. If there is currently one it
+    will be updated to be the new string */
 void Authentication::setError(const std::string &error)
 {
     int index = findMenuItem(_menus, "x-canonical-unity8-policy-kit-type", "error");
@@ -337,6 +365,9 @@ void Authentication::setError(const std::string &error)
     g_menu_insert_item(_menus.get(), location, item.get());
 }
 
+/** Add a request for information from the user. This is a menu item in
+    the menu model. If there isn't an item, it is created here, else it
+    is updated to include this request. */
 void Authentication::addRequest(const std::string &request, bool password)
 {
     /* If we're showing one and we get a request, uhm,
@@ -351,7 +382,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     std::string label;
     if (request == "password:" || request == "Password:")
     {
-        label = "Password";  // TODO: Add Username
+        label = "Password";  // TODO: Add Username (Password for Joe)
     }
     else
     {
@@ -380,6 +411,8 @@ void Authentication::addRequest(const std::string &request, bool password)
     showNotification();
 }
 
+/** Sends the callback, once and only once. It ensures that we don't
+    call it multiple times and that it exits. */
 void Authentication::issueCallback(Authentication::State state)
 {
     /* Ensure that the callback is sent only

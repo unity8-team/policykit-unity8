@@ -32,11 +32,11 @@
 class Authentication
 {
 public:
+    /** When the Authentication is complete the result of it. */
     enum class State
     {
-        INITIALIZED,
-        CANCELLED,
-        SUCCESS
+        CANCELLED, /**< Authentication was cancelled */
+        SUCCESS    /**< Authentication succeeded */
     };
 
     Authentication(const std::string &action_id,
@@ -70,29 +70,33 @@ protected:
 
 private:
     /* Passed in parameters */
-    std::string _action_id;
-    std::string _message;
-    std::string _icon_name;
-    std::string _cookie;
-    std::list<std::string> _identities;
-    std::function<void(State)> _finishedCallback;
+    std::string _action_id;                       /**< Type of action from PolicyKit */
+    std::string _message;                         /**< Message to show to the user */
+    std::string _icon_name;                       /**< Icon to show with the notification */
+    std::string _cookie;                          /**< Unique string to track the authentication */
+    std::list<std::string> _identities;           /**< Identities that can be used to authenticate this action */
+    std::function<void(State)> _finishedCallback; /**< Function to call when the user has completed the authorization */
 
     /* Internal State */
-    bool _callbackSent = false;
-    guint _actionsExport = 0;
-    guint _menusExport = 0;
+    bool _callbackSent = false; /**< Ensure that we only call the callback once. */
+    guint _actionsExport = 0;   /**< ID returned by GDBus for the export of the action group */
+    guint _menusExport = 0;     /**< ID returned by GDBus for the export of the menus */
 
     /* Stuff we build */
-    std::string dbusPath;
-    std::shared_ptr<GDBusConnection> _sessionBus;
-    std::shared_ptr<NotifyNotification> _notification;
-    std::shared_ptr<GSimpleActionGroup> _actions;
-    std::shared_ptr<GMenu> _menus;
+    std::string dbusPath; /**< Unique path we built for this authentication object for exporting things on DBus */
+    std::shared_ptr<GDBusConnection>
+        _sessionBus; /**< Reference to the session bus so we can ensure it lives as long as we do */
+    std::shared_ptr<NotifyNotification> _notification; /**< If we have a notification shown, this is the reference to
+                                                          it. May be nullptr. */
+    std::shared_ptr<GSimpleActionGroup> _actions;      /**< Action group containing the response action */
+    std::shared_ptr<GMenu> _menus; /**< The menu model to export to the snap decision. May include info or error items
+                                      as well as the response item. */
 
-    std::shared_ptr<Session> _session;
+    std::shared_ptr<Session> _session; /**< The PolicyKit session that asks us for information */
 
 protected:
+    /** Null constructor for mocking in the test suite */
     Authentication()
     {
-    } /* For test mocks */
+    }
 };
