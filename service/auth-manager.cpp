@@ -36,7 +36,7 @@ AuthManager::AuthManager()
         bool hasDialogs = false;
         for (auto cap = caps; cap != nullptr && !hasDialogs; cap = g_list_next(cap))
         {
-            auto capname = reinterpret_cast<const gchar *>(cap->data);
+            auto capname = static_cast<const gchar *>(cap->data);
             if (capname == nullptr)
                 continue;
 
