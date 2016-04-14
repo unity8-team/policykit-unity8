@@ -117,12 +117,10 @@ class SessionMock : public Session
 {
 public:
     std::string _identity;
-    std::string _cookie;
     bool _initiated;
 
-    SessionMock(const std::string &identity, const std::string &cookie)
+    SessionMock(const std::string &identity)
         : _identity(identity)
-        , _cookie(cookie)
         , _initiated(false)
     {
     }
@@ -176,10 +174,10 @@ public:
     std::weak_ptr<SessionMock> lastSession;
 
 protected:
-    std::shared_ptr<Session> buildSession(const std::string &identity, const std::string &cookie) override
+    std::shared_ptr<Session> buildSession(const std::string &identity) override
     {
-        g_debug("Building a Mock session: %s, %s", identity.c_str(), cookie.c_str());
-        auto session = std::make_shared<SessionMock>(identity, cookie);
+        g_debug("Building a Mock session: %s", identity.c_str());
+        auto session = std::make_shared<SessionMock>(identity);
         lastSession = session;
         return session;
     }
@@ -193,7 +191,6 @@ TEST_F(AuthenticationTest, Init)
 
     ASSERT_FALSE(auth.lastSession.expired());
     EXPECT_EQ("unix-name:me", auth.lastSession.lock()->_identity);
-    EXPECT_EQ("everyone-loves-cookies", auth.lastSession.lock()->_cookie);
 }
 
 TEST_F(AuthenticationTest, Cancel)

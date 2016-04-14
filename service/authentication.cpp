@@ -64,23 +64,23 @@ static void notification_action_cancel(NotifyNotification *notification, char *a
 }
 
 /* Initialize everything */
-Authentication::Authentication(const std::string &action_id,
-                               const std::string &message,
-                               const std::string &icon_name,
-                               const std::string &cookie,
-                               const std::list<std::string> &identities,
-                               const std::function<void(State)> &finishedCallback)
-    : _action_id(action_id)
-    , _message(message)
-    , _icon_name(icon_name)
-    , _cookie(cookie)
-    , _identities(identities)
-    , _finishedCallback(finishedCallback)
+Authentication::Authentication(const std::string &in_action_id,
+                               const std::string &in_message,
+                               const std::string &in_icon_name,
+                               const std::string &in_cookie,
+                               const std::list<std::string> &in_identities,
+                               const std::function<void(State)> &in_finishedCallback)
+    : action_id(in_action_id)
+    , message(in_message)
+    , icon_name(in_icon_name)
+    , cookie(in_cookie)
+    , identities(in_identities)
+    , finishedCallback(in_finishedCallback)
 {
     GError *error = nullptr;
 
     /* Get the Bus */
-    _sessionBus = shared_gobject<GDBusConnection>(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
+    sessionBus = shared_gobject<GDBusConnection>(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
     check_error(error, "Unable to get session bus");
 
     /* Build a unique path */
@@ -90,19 +90,19 @@ Authentication::Authentication(const std::string &action_id,
     g_debug("DBus Path: %s", dbusPath.c_str());
 
     /* Setup Actions */
-    _actions = shared_gobject<GSimpleActionGroup>(g_simple_action_group_new());
+    actions = shared_gobject<GSimpleActionGroup>(g_simple_action_group_new());
     auto pwaction =
         shared_gobject<GSimpleAction>(g_simple_action_new_stateful("response", nullptr, g_variant_new_string("")));
-    g_action_map_add_action(G_ACTION_MAP(_actions.get()), G_ACTION(pwaction.get()));
+    g_action_map_add_action(G_ACTION_MAP(actions.get()), G_ACTION(pwaction.get()));
 
-    _actionsExport = g_dbus_connection_export_action_group(_sessionBus.get(), dbusPath.c_str(),
-                                                           G_ACTION_GROUP(_actions.get()), &error);
+    actionsExport = g_dbus_connection_export_action_group(sessionBus.get(), dbusPath.c_str(),
+                                                          G_ACTION_GROUP(actions.get()), &error);
     check_error(error, "Unable to export actions");
 
     /* Setup Menus */
-    _menus = shared_gobject<GMenu>(g_menu_new());
-    _menusExport =
-        g_dbus_connection_export_menu_model(_sessionBus.get(), dbusPath.c_str(), G_MENU_MODEL(_menus.get()), &error);
+    menus = shared_gobject<GMenu>(g_menu_new());
+    menusExport =
+        g_dbus_connection_export_menu_model(sessionBus.get(), dbusPath.c_str(), G_MENU_MODEL(menus.get()), &error);
     check_error(error, "Unable to export menu model");
 }
 
@@ -112,10 +112,10 @@ Authentication::~Authentication()
        complete message to the creator */
     cancel();
 
-    if (_menusExport != 0)
-        g_dbus_connection_unexport_menu_model(_sessionBus.get(), _menusExport);
-    if (_actionsExport != 0)
-        g_dbus_connection_unexport_action_group(_sessionBus.get(), _actionsExport);
+    if (menusExport != 0)
+        g_dbus_connection_unexport_menu_model(sessionBus.get(), menusExport);
+    if (actionsExport != 0)
+        g_dbus_connection_unexport_action_group(sessionBus.get(), actionsExport);
 }
 
 /** Used to start the session working, split out from the constructor
@@ -123,7 +123,7 @@ Authentication::~Authentication()
 void Authentication::start(void)
 {
     /** TODO: We should have an identity selector, not a requirement yet. */
-    _session = buildSession(*_identities.begin(), _cookie);
+    session = buildSession(*identities.begin());
 }
 
 /** Build the notification object along with all the hints that are
@@ -132,7 +132,7 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
 {
     /* Build our notification */
     auto notification = shared_gobject<NotifyNotification>(
-        notify_notification_new(_("Elevated permissions required"), _message.c_str(), _icon_name.c_str()));
+        notify_notification_new(_("Elevated permissions required"), message.c_str(), icon_name.c_str()));
     if (!notification)
         throw std::runtime_error("Unable to setup notification object");
 
@@ -152,7 +152,7 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     g_variant_builder_open(&builder, G_VARIANT_TYPE("{sv}"));
     g_variant_builder_add_value(&builder, g_variant_new_string("busName"));
     g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
-    g_variant_builder_add_value(&builder, g_variant_new_string(g_dbus_connection_get_unique_name(_sessionBus.get())));
+    g_variant_builder_add_value(&builder, g_variant_new_string(g_dbus_connection_get_unique_name(sessionBus.get())));
     g_variant_builder_close(&builder);
     g_variant_builder_close(&builder);
     g_variant_builder_open(&builder, G_VARIANT_TYPE("{sv}"));
@@ -187,18 +187,18 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     \param identity A PK identity string
     \param cookie An unique identifier for this authentication
 */
-std::shared_ptr<Session> Authentication::buildSession(const std::string &identity, const std::string &cookie)
+std::shared_ptr<Session> Authentication::buildSession(const std::string &identity)
 {
     g_debug("Building a new PK session");
-    auto session = std::make_shared<Session>(identity, cookie);
+    auto lsession = std::make_shared<Session>(identity, cookie);
 
-    session->request().connect([this](const std::string &prompt, bool password) { addRequest(prompt, password); });
+    lsession->request().connect([this](const std::string &prompt, bool password) { addRequest(prompt, password); });
 
-    session->info().connect([this](const std::string &info) { setInfo(info); });
+    lsession->info().connect([this](const std::string &info) { setInfo(info); });
 
-    session->error().connect([this](const std::string &error) { setError(error); });
+    lsession->error().connect([this](const std::string &error) { setError(error); });
 
-    session->complete().connect([this](bool success) {
+    lsession->complete().connect([this](bool success) {
         hideNotification();
 
         if (success)
@@ -208,29 +208,29 @@ std::shared_ptr<Session> Authentication::buildSession(const std::string &identit
         else
         {
             /* If we're not successful we'll try again */
-            _session = buildSession(*_identities.begin(), _cookie);
+            session = buildSession(*identities.begin());
         }
     });
 
-    session->initiate();
+    lsession->initiate();
 
-    return session;
+    return lsession;
 }
 
 /** Show a notification to the user, may include building it if it
     has been built previously. */
 void Authentication::showNotification()
 {
-    if (!_notification)
-        _notification = buildNotification();
+    if (!notification)
+        notification = buildNotification();
 
-    if (!_notification)
+    if (!notification)
         return;
 
     g_debug("Showing Notification");
 
     GError *error = nullptr;
-    notify_notification_show(_notification.get(), &error);
+    notify_notification_show(notification.get(), &error);
     check_error(error, "Unable to show notification");
 }
 
@@ -240,18 +240,18 @@ void Authentication::showNotification()
 void Authentication::hideNotification()
 {
     /* Close the notification */
-    if (_notification)
-        notify_notification_close(_notification.get(), nullptr);
-    _notification.reset();
+    if (notification)
+        notify_notification_close(notification.get(), nullptr);
+    notification.reset();
 
     /* Clear the menu */
-    if (_menus)
-        g_menu_remove_all(G_MENU(_menus.get()));
+    if (menus)
+        g_menu_remove_all(G_MENU(menus.get()));
 
     /* Clear the response */
-    if (_actions)
+    if (actions)
     {
-        auto action = g_action_map_lookup_action(G_ACTION_MAP(_actions.get()), "response"); /* No transfer */
+        auto action = g_action_map_lookup_action(G_ACTION_MAP(actions.get()), "response"); /* No transfer */
         if (action != nullptr && G_IS_SIMPLE_ACTION(action))
             g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
     }
@@ -271,7 +271,7 @@ void Authentication::cancel()
 void Authentication::checkResponse()
 {
     /* Get the password */
-    auto vresponse = g_action_group_get_action_state(G_ACTION_GROUP(_actions.get()), "response");
+    auto vresponse = g_action_group_get_action_state(G_ACTION_GROUP(actions.get()), "response");
     std::string response(g_variant_get_string(vresponse, nullptr));
     g_variant_unref(vresponse);
 
@@ -279,7 +279,7 @@ void Authentication::checkResponse()
 
     hideNotification();
 
-    _session->requestResponse(response);
+    session->requestResponse(response);
 }
 
 /** Find a menu item in a menu that has a specific value on an attribute */
@@ -312,7 +312,7 @@ int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const st
     will be updated to be the new string */
 void Authentication::setInfo(const std::string &info)
 {
-    int index = findMenuItem(_menus, "x-canonical-unity8-policy-kit-type", "info");
+    int index = findMenuItem(menus, "x-canonical-unity8-policy-kit-type", "info");
 
     std::shared_ptr<GMenuItem> item;
 
@@ -325,12 +325,12 @@ void Authentication::setInfo(const std::string &info)
     else
     {
         /* Update it */
-        item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(_menus.get()), index));
+        item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), info.c_str());
-        g_menu_remove(_menus.get(), index);
+        g_menu_remove(menus.get(), index);
     }
 
-    g_menu_prepend_item(_menus.get(), item.get());
+    g_menu_prepend_item(menus.get(), item.get());
 }
 
 /** Set the error string to show the user. If there is no error menu item
@@ -338,7 +338,7 @@ void Authentication::setInfo(const std::string &info)
     will be updated to be the new string */
 void Authentication::setError(const std::string &error)
 {
-    int index = findMenuItem(_menus, "x-canonical-unity8-policy-kit-type", "error");
+    int index = findMenuItem(menus, "x-canonical-unity8-policy-kit-type", "error");
 
     std::shared_ptr<GMenuItem> item;
 
@@ -352,18 +352,18 @@ void Authentication::setError(const std::string &error)
     else
     {
         /* Update it */
-        item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(_menus.get()), index));
+        item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), error.c_str());
-        g_menu_remove(_menus.get(), index);
+        g_menu_remove(menus.get(), index);
     }
 
     int location = 0;
-    if (g_menu_model_get_n_items(G_MENU_MODEL(_menus.get())) > 1)
+    if (g_menu_model_get_n_items(G_MENU_MODEL(menus.get())) > 1)
     {
         location = 1;
     }
 
-    g_menu_insert_item(_menus.get(), location, item.get());
+    g_menu_insert_item(menus.get(), location, item.get());
 }
 
 /** Add a request for information from the user. This is a menu item in
@@ -374,11 +374,11 @@ void Authentication::addRequest(const std::string &request, bool password)
     /* If we're showing one and we get a request, uhm,
        that is weird. But let's just clear it and start
        again. */
-    if (_notification)
+    if (notification)
         hideNotification();
 
     /* Fix menu item */
-    int index = findMenuItem(_menus, "x-canonical-type", "com.canonical.snapdecision.textfield");
+    int index = findMenuItem(menus, "x-canonical-type", "com.canonical.snapdecision.textfield");
 
     std::string label;
     if (request == "password:" || request == "Password:")
@@ -396,19 +396,19 @@ void Authentication::addRequest(const std::string &request, bool password)
         auto item = shared_gobject<GMenuItem>(g_menu_item_new(label.c_str(), "pk.response"));
         g_menu_item_set_attribute_value(item.get(), "x-canonical-type",
                                         g_variant_new_string("com.canonical.snapdecision.textfield"));
-        g_menu_append_item(_menus.get(), item.get());
+        g_menu_append_item(menus.get(), item.get());
     }
     else
     {
         /* Update it */
-        auto item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(_menus.get()), index));
+        auto item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), label.c_str());
-        g_menu_remove(_menus.get(), index);
-        g_menu_insert_item(_menus.get(), index, item.get());
+        g_menu_remove(menus.get(), index);
+        g_menu_insert_item(menus.get(), index, item.get());
     }
 
     /* Build it and show it */
-    _notification = buildNotification();
+    notification = buildNotification();
     showNotification();
 }
 
@@ -419,13 +419,13 @@ void Authentication::issueCallback(Authentication::State state)
     /* Ensure that the callback is sent only
        once. We call this in the destructor to
        ensure that it is called at least once. */
-    if (_callbackSent)
+    if (callbackSent)
         return;
 
     /* Check to ensure we were given a valid callback
        and then call it. */
-    if (_finishedCallback)
-        _finishedCallback(state);
+    if (finishedCallback)
+        finishedCallback(state);
 
-    _callbackSent = true;
+    callbackSent = true;
 }
