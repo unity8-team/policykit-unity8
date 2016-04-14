@@ -135,7 +135,7 @@ void Agent::cancelCleanup(gpointer data)
 }
 
 /** Disconnect from the g_cancellable */
-void Agent::unregisterCancellable(std::string handle)
+void Agent::unregisterCancellable(const std::string &handle)
 {
     g_debug("Unregistering cancellable authorization: %s", handle.c_str());
     auto cancel = cancellables.find(handle);

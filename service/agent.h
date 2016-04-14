@@ -78,7 +78,7 @@ private:
         cookie that they were associated with. */
     std::map<std::string, std::pair<std::shared_ptr<GCancellable>, gulong>> cancellables;
 
-    void unregisterCancellable(std::string handle);
+    void unregisterCancellable(const std::string &handle);
 
     static void cancelStatic(GCancellable *cancel, gpointer user_data);
     static void cancelCleanup(gpointer data);
