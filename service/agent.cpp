@@ -89,13 +89,13 @@ Agent::~Agent()
         \param cancellable Object to notify when we need to cancel the authentication
         \param callback Function to call when the user has completed the authorization
 */
-void Agent::authRequest(std::string action_id,
-                        std::string message,
-                        std::string icon_name,
-                        std::string cookie,
-                        std::list<std::string> identities,
-                        std::shared_ptr<GCancellable> cancellable,
-                        std::function<void(Authentication::State)> callback)
+void Agent::authRequest(const std::string &action_id,
+                        const std::string &message,
+                        const std::string &icon_name,
+                        const std::string &cookie,
+                        const std::list<std::string> &identities,
+                        const std::shared_ptr<GCancellable> &cancellable,
+                        const std::function<void(Authentication::State)> &callback)
 {
     gulong connecthandle = 0;
     if (cancellable)

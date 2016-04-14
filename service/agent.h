@@ -55,13 +55,13 @@ public:
     Agent(const std::shared_ptr<AuthManager> &authmanager);
     ~Agent();
 
-    void authRequest(std::string action_id,
-                     std::string message,
-                     std::string icon_name,
-                     std::string cookie,
-                     std::list<std::string> identities,
-                     std::shared_ptr<GCancellable> cancellable,
-                     std::function<void(Authentication::State)> callback);
+    void authRequest(const std::string &action_id,
+                     const std::string &message,
+                     const std::string &icon_name,
+                     const std::string &cookie,
+                     const std::list<std::string> &identities,
+                     const std::shared_ptr<GCancellable> &cancellable,
+                     const std::function<void(Authentication::State)> &callback);
 
 private:
     /** Auth manager used to create authorization UI's */
