@@ -58,13 +58,13 @@ static void agent_glib_class_init(AgentGlibClass *klass)
     listener->initiate_authentication = initiate_authentication;
     listener->initiate_authentication_finish = [](PolkitAgentListener *listener, GAsyncResult *res,
                                                   GError **error) -> gboolean {
-        return g_task_propagate_boolean(reinterpret_cast<GTask *>(res), error);
+        return g_task_propagate_boolean(G_TASK(res), error);
     };
 }
 
 AgentGlib *agent_glib_new(Agent *parent)
 {
-    auto ptr = reinterpret_cast<AgentGlib *>(g_object_new(agent_glib_get_type(), nullptr));
+    auto ptr = static_cast<AgentGlib *>(g_object_new(agent_glib_get_type(), nullptr));
     ptr->cpp = parent;
     return ptr;
 }
@@ -85,14 +85,14 @@ static void initiate_authentication(PolkitAgentListener *agent_listener,
     std::list<std::string> idents;
     for (GList *identhead = identities; identhead != nullptr; identhead = g_list_next(identhead))
     {
-        auto ident = reinterpret_cast<PolkitIdentity *>(identhead->data);
+        auto ident = static_cast<PolkitIdentity *>(identhead->data);
         auto identstr = polkit_identity_to_string(ident);
         idents.push_back(identstr);
         g_free(identstr);
     }
 
     /* Get a C++ shared ptr for cancellable */
-    auto cancel = std::shared_ptr<GCancellable>(reinterpret_cast<GCancellable *>(g_object_ref(cancellable)),
+    auto cancel = std::shared_ptr<GCancellable>(static_cast<GCancellable *>(g_object_ref(cancellable)),
                                                 [](GCancellable *cancel) { g_clear_object(&cancel); });
     auto task = std::shared_ptr<GTask>(g_task_new(agent_listener, nullptr, callback, user_data),
                                        [](GTask *task) { g_clear_object(&task); });
