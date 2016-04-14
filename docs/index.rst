@@ -93,3 +93,22 @@ Session GLib Interface
    :private-members:
    :undoc-members:
 
+Quality
+=======
+
+Merge Requirements
+------------------
+
+* TODO
+
+Manual Integration Test Plan
+----------------------------
+
+* **PolicyKit Prompt** Check to ensure a prompt comes up when requested
+	#. Install the terminal app
+	#. Execute ``pkexec ls``
+		* Ensure that a dialog is shown by Unity8 that asks for your password
+		* Make sure that the password is not requested on the terminal
+	#. Enter the user's password in the dialog
+		* The command won't show anything if it is successful, error will result in error messages
+
