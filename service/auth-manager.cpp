@@ -34,9 +34,11 @@ AuthManager::AuthManager()
         /* Ensure the server has what we need */
         auto caps = notify_get_server_caps();
         bool hasDialogs = false;
-        for (auto cap = caps; cap != nullptr; cap = g_list_next(cap))
+        for (auto cap = caps; cap != nullptr && !hasDialogs; cap = g_list_next(cap))
         {
             auto capname = reinterpret_cast<const gchar *>(cap->data);
+            if (capname == nullptr)
+                continue;
 
             if (std::string(capname) == "x-canonical-private-synchronous")
                 hasDialogs = true;
