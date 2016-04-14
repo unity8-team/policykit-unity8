@@ -66,7 +66,7 @@ protected:
 
 private:
     /** All of the Authentication objects that currently exist */
-    std::map<std::string, std::shared_ptr<Authentication>> inFlight;
+    std::map<std::string, std::shared_ptr<Authentication>> in_flight;
     /** GLib thread for authentications */
     GLib::ContextThread thread;
 };

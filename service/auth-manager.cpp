@@ -60,10 +60,10 @@ AuthManager::~AuthManager()
 {
     thread.executeOnThread<bool>([this]() {
         /* Cancel our authentications */
-        while (!inFlight.empty())
+        while (!in_flight.empty())
         {
             /* Use a while because we modify the list internally */
-            cancelAuthentication((*inFlight.begin()).first);
+            cancelAuthentication((*in_flight.begin()).first);
             thread.runQueuedJobs();
         }
 
@@ -84,7 +84,7 @@ AuthManager::~AuthManager()
         Creates the authentication object on the notification thread
         using the buildAuthentication function. It also creates a more
         complex callback where, when the callback is called it also removes
-        this authentication from the inFlight map which is tracking
+        this authentication from the in_flight map which is tracking
         Authentication objects.
 */
 std::string AuthManager::createAuthentication(const std::string &action_id,
@@ -94,36 +94,37 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
                                               const std::list<std::string> &identities,
                                               const std::function<void(Authentication::State)> &finishedCallback)
 {
-    return thread.executeOnThread<std::string>([this, &action_id, &message, &icon_name, &cookie, &identities,
-                                                &finishedCallback]() {
-        /* Build the authentication object */
-        auto auth = buildAuthentication(
-            action_id, message, icon_name, cookie, identities,
-            [this, cookie, finishedCallback](Authentication::State state) {
-                this->thread.timeout(std::chrono::hours{0},
-                                     [this, cookie]() {
-                                         auto entry = inFlight.find(cookie);
+    return thread.executeOnThread<std::string>(
+        [this, &action_id, &message, &icon_name, &cookie, &identities, &finishedCallback]() {
+            /* Build the authentication object */
+            auto auth = buildAuthentication(
+                action_id, message, icon_name, cookie, identities,
+                [this, cookie, finishedCallback](Authentication::State state) {
+                    this->thread.timeout(
+                        std::chrono::hours{0},
+                        [this, cookie]() {
+                            auto entry = in_flight.find(cookie);
 
-                                         if (entry == inFlight.end())
-                                         {
-                                             throw std::runtime_error("Handle for Authentication '" + cookie +
-                                                                      "' isn't found in 'inFlight' authentication map");
-                                         }
+                            if (entry == in_flight.end())
+                            {
+                                throw std::runtime_error("Handle for Authentication '" + cookie +
+                                                         "' isn't found in 'in_flight' authentication map");
+                            }
 
-                                         inFlight.erase(entry);
-                                     });
+                            in_flight.erase(entry);
+                        });
 
-                /* Up the chain */
-                finishedCallback(state);
-            });
+                    /* Up the chain */
+                    finishedCallback(state);
+                });
 
-        /* Throw it in our queue */
-        inFlight[cookie] = auth;
+            /* Throw it in our queue */
+            in_flight[cookie] = auth;
 
-        auth->start();
+            auth->start();
 
-        return cookie;
-    });
+            return cookie;
+        });
 }
 
 /** The actual call to create the object, split out so that it can
@@ -147,15 +148,15 @@ std::shared_ptr<Authentication> AuthManager::buildAuthentication(
 bool AuthManager::cancelAuthentication(const std::string &handle)
 {
     return thread.executeOnThread<bool>([this, &handle]() {
-        auto entry = inFlight.find(handle);
-        if (entry == inFlight.end())
+        auto entry = in_flight.find(handle);
+        if (entry == in_flight.end())
         {
             g_debug("Unable to find authentication '%s' to cancel", handle.c_str());
             return false;
         }
 
         /* This should change the state which will cause it to be
-           dropped from the inFlight map */
+           dropped from the in_flight map */
         (*entry).second->cancel();
 
         return true;
