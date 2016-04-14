@@ -245,7 +245,7 @@ TEST_F(AgentTest, StandardRequest)
                                        "my-action", "Do an authentication", "icon-name", {}, /* details */
                                        "cookie-monster", policykit->userIdentity());
 
-    EXPECT_EQ(true, beginfuture.get());
+    EXPECT_TRUE(beginfuture.get());
 }
 
 TEST_F(AgentTest, CancelRequest)
@@ -268,8 +268,8 @@ TEST_F(AgentTest, CancelRequest)
     auto cancelfuture = policykit->cancelAuthentication(g_dbus_connection_get_unique_name(system),
                                                         "/com/canonical/unity8/policyKit", "cookie-monster");
 
-    EXPECT_EQ(true, cancelfuture.get());
-    EXPECT_EQ(false, beginfuture.get());
+    EXPECT_TRUE(cancelfuture.get());
+    EXPECT_FALSE(beginfuture.get());
 }
 
 class AuthManagerCancelFake : public AuthManager
@@ -326,5 +326,5 @@ TEST_F(AgentTest, ShutdownCancel)
 
     agent.reset();
 
-    EXPECT_EQ(false, beginfuture.get());
+    EXPECT_FALSE(beginfuture.get());
 }
