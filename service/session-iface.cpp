@@ -29,13 +29,14 @@
 */
 class Session::Impl
 {
-public:
+private:
     /** GObject based session object that we're wrapping */
     PolkitAgentSession *session;
     /** A sentinal to say whether complete has been signaled, if not
         we need to cancel before unref'ing the session. */
     bool sessionComplete;
 
+public:
     Impl(const std::string &identity, const std::string &cookie)
         : session(polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str()))
         , sessionComplete(false)
@@ -67,6 +68,7 @@ public:
         polkit_agent_session_response(session, response.c_str());
     }
 
+private:
     /** Static callback for the request signal. Passed up to the
         request C++ signal. */
     static void requestCb(PolkitAgentSession *session, const gchar *text, gboolean password, gpointer user_data)
@@ -104,6 +106,7 @@ public:
         obj->complete(success == TRUE);
     }
 
+public:
     /** Internal implementation functions don't have to have good names */
     void go()
     {
