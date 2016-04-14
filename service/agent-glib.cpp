@@ -69,6 +69,14 @@ AgentGlib *agent_glib_new(Agent *parent)
     return ptr;
 }
 
+static inline std::string protect_string(const gchar *instr)
+{
+    if (instr == nullptr)
+        return {};
+    else
+        return std::string(instr);
+}
+
 static void initiate_authentication(PolkitAgentListener *agent_listener,
                                     const gchar *action_id,
                                     const gchar *message,
@@ -87,7 +95,7 @@ static void initiate_authentication(PolkitAgentListener *agent_listener,
     {
         auto ident = static_cast<PolkitIdentity *>(identhead->data);
         auto identstr = polkit_identity_to_string(ident);
-        idents.push_back(identstr);
+        idents.push_back(protect_string(identstr));
         g_free(identstr);
     }
 
@@ -110,5 +118,6 @@ static void initiate_authentication(PolkitAgentListener *agent_listener,
     };
 
     auto agentglib = reinterpret_cast<AgentGlib *>(agent_listener);
-    agentglib->cpp->authRequest(action_id, message, icon_name, cookie, idents, cancel, call);
+    agentglib->cpp->authRequest(protect_string(action_id), protect_string(message), protect_string(icon_name),
+                                protect_string(cookie), idents, cancel, call);
 }
