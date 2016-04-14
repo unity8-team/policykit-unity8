@@ -123,14 +123,14 @@ void Agent::authRequest(const std::string &action_id,
 /** Static function to do the cancel */
 void Agent::cancelStatic(GCancellable *cancel, gpointer user_data)
 {
-    auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(user_data);
+    auto pair = static_cast<std::pair<Agent *, std::string> *>(user_data);
     pair->first->_authmanager->cancelAuthentication(pair->second);
 }
 
 /** Static function to clean up the data needed for cancelling */
 void Agent::cancelCleanup(gpointer data)
 {
-    auto pair = reinterpret_cast<std::pair<Agent *, std::string> *>(data);
+    auto pair = static_cast<std::pair<Agent *, std::string> *>(data);
     delete pair;
 }
 
