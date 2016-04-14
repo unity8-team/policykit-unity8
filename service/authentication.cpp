@@ -19,8 +19,8 @@
 
 #include "authentication.h"
 
-#include <iostream>
 #include <glib/gi18n.h>
+#include <iostream>
 
 /* Make it so all our GObjects are easier to work with */
 template <typename T>
