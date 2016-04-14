@@ -47,6 +47,12 @@ public:
     {
         if (!sessionComplete)
             polkit_agent_session_cancel(session);
+
+        g_signal_handler_disconnect(session, gsig_request);
+        g_signal_handler_disconnect(session, gsig_show_info);
+        g_signal_handler_disconnect(session, gsig_show_error);
+        g_signal_handler_disconnect(session, gsig_completed);
+
         g_clear_object(&session);
     }
 
@@ -60,6 +66,11 @@ public:
     /** Signal from the session that says the session is complete, a boolean
         for whether it was successful or not. */
     core::Signal<bool> complete;
+
+    gulong gsig_request = 0;    /**< GLib signal handle */
+    gulong gsig_show_info = 0;  /**< GLib signal handle */
+    gulong gsig_show_error = 0; /**< GLib signal handle */
+    gulong gsig_completed = 0;  /**< GLib signal handle */
 
     /** Sends a response to the Polkit Session.
         \param response Text response from the user */
@@ -110,10 +121,10 @@ public:
     /** Internal implementation functions don't have to have good names */
     void go()
     {
-        g_signal_connect(G_OBJECT(session), "request", G_CALLBACK(requestCb), this);
-        g_signal_connect(G_OBJECT(session), "show-info", G_CALLBACK(infoCb), this);
-        g_signal_connect(G_OBJECT(session), "show-error", G_CALLBACK(errorCb), this);
-        g_signal_connect(G_OBJECT(session), "completed", G_CALLBACK(completeCb), this);
+        gsig_request = g_signal_connect(session, "request", G_CALLBACK(requestCb), this);
+        gsig_show_info = g_signal_connect(session, "show-info", G_CALLBACK(infoCb), this);
+        gsig_show_error = g_signal_connect(session, "show-error", G_CALLBACK(errorCb), this);
+        gsig_completed = g_signal_connect(session, "completed", G_CALLBACK(completeCb), this);
 
         polkit_agent_session_initiate(session);
     }
