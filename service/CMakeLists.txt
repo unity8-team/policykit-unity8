@@ -1,7 +1,10 @@
 
-include_directories(${POLICYKIT_INCLUDE_DIRS})
-include_directories(${GIO_INCLUDE_DIRS})
-include_directories(${NOTIFY_INCLUDE_DIRS})
+include_directories(
+	SYSTEM
+	${POLICYKIT_INCLUDE_DIRS}
+	${GIO_INCLUDE_DIRS}
+	${NOTIFY_INCLUDE_DIRS}
+)
 
 add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
 
