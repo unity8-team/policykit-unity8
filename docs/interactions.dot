@@ -1,10 +1,10 @@
 digraph interactions {
-	pk [label="Policy\nKit"];
-	agent [label="Agent"];
-	authman [label="Authorization\nManager"];
-	auth [label="Authorization"];
-	u8 [label="Unity 8"];
-	session [label="PAM Session"];
+	pk [label="Policy\nKit", href="https://www.freedesktop.org/wiki/Software/polkit/"];
+	agent [label="Agent", href="#agent"];
+	authman [label="Authentication\nManager", href="#authentication-manager"];
+	auth [label="Authentication", href="#authentication"];
+	u8 [label="Unity 8", href="https://launchpad.net/unity8"];
+	session [label="PAM Session", href="http://www.linux-pam.org/"];
 
 	pk -> agent [label="Requests\nAuth Check"];
 	agent -> authman [label="Create\nAuthentication"];

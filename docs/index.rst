@@ -99,7 +99,20 @@ Quality
 Merge Requirements
 ------------------
 
-* TODO
+Submitter Responsibilities
+..........................
+
+* Ensure the project compiles and the test suite executes without error
+* Ensure that non-obvious code has comments explaining it
+* If the change works on specific profiles, please include those in the merge description. 
+
+Reviewer Responsibilities
+.........................
+
+* Did the Jenkins build compile? Pass? Run unit tests successfully?
+* Are there appropriate tests to cover any new functionality?
+* Have the integration tests updated appropriately?
+* Can you understand what is happening without asking on IRC?
 
 Manual Integration Test Plan
 ----------------------------
