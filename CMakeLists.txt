@@ -1,4 +1,4 @@
-project(unity8-policy-kit CXX)
+project(policykit-unity8 CXX)
 cmake_minimum_required (VERSION 3.5.1)
 
 set (PACKAGE_VERSION "0.1")
