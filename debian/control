@@ -1,4 +1,4 @@
-Source: unity8-policy-kit
+Source: policykit-unity8
 Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
@@ -17,13 +17,13 @@ Build-Depends: click-dev,
                libpolkit-agent-1-dev,
                python3-dbusmock,
 Standards-Version: 3.9.5
-Homepage: https://launchpad.net/unity8-policy-kit
-# If you aren't a member of ~indicator-applet-developers but need to upload
-# packaging changes, just go ahead.  ~indicator-applet-developers will notice
+Homepage: https://launchpad.net/policykit-unity8
+# If you aren't a member of ~unity-api-team but need to upload
+# packaging changes, just go ahead.  ~unity-api-team will notice
 # and sync up the code again.
-Vcs-Bzr: lp:unity8-policy-kit
+Vcs-Bzr: lp:policykit-unity8
 
-Package: unity8-policy-kit
+Package: policykit-unity8
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
