@@ -1,4 +1,4 @@
-project(unity8-policy-kit CXX)
+project(policykit-unity8 CXX)
 
 find_package(PkgConfig REQUIRED)
 
