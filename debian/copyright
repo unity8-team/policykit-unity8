@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Unity8 Policy Kit
-Source: http://launchpad.net/unity8-policy-kit
+Upstream-Name: Unity8 PolicyKit Agent
+Source: http://launchpad.net/policykit-unity8
 
 Files: *
 Copyright: 2016 Canonical, Ltd.
