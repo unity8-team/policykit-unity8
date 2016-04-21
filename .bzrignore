@@ -19,4 +19,4 @@ data/unity8-policy-kit.conf
 xml/
 docs/_build/*
 po/POTFILES
-po/unity8-policy-kit.pot
+po/policykit-unity8.pot
