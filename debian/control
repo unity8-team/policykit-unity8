@@ -21,16 +21,14 @@ Homepage: https://launchpad.net/unity8-policy-kit
 # If you aren't a member of ~indicator-applet-developers but need to upload
 # packaging changes, just go ahead.  ~indicator-applet-developers will notice
 # and sync up the code again.
-Vcs-Git: lp:unity8-policy-kit
+Vcs-Bzr: lp:unity8-policy-kit
 
 Package: unity8-policy-kit
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: service to prompt for policy kit permissions
- Allows applications to request an item be paid for by the user.
- This requires interaction with the server backend to handle the
- payment provider and give that money to the developer. This service
- coordinates the payment interaction with the server on the device.
- .
- This package provides a service for the Pay Service
+ Connects to the Policy Kit daemon for the session and responds
+ to requests for authentication. It then creates an Unity8
+ snap decision to request the password from the user, returning
+ it back to PolicyKit.
