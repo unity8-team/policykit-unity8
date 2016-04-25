@@ -1,19 +1,40 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+	SYSTEM
+	${POLICYKIT_INCLUDE_DIRS}
+	${GIO_INCLUDE_DIRS}
+	${NOTIFY_INCLUDE_DIRS}
+)
+
+add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
 
 ###################
 # Library of Stuff
 ###################
 
 set(LIBRARY_SOURCES
+	agent.h
+	agent.cpp
+	agent-glib.h
+	agent-glib.cpp
 	auth-manager.h
 	auth-manager.cpp
-	polkit-iface.h
-	polkit-iface.cpp
+	authentication.h
+	authentication.cpp
+	glib-thread.h
+	glib-thread.cpp
+	session-iface.h
+	session-iface.cpp
 )
 
 add_library(service-lib STATIC
 	${LIBRARY_SOURCES}
+)
+
+target_link_libraries(service-lib
+	${POLICYKIT_LIBRARIES}
+	${GIO_LIBRARIES}
+	${NOTIFY_LIBRARIES}
 )
 
 ###################
@@ -32,13 +53,13 @@ target_link_libraries(policykit-agent
 )
 install(TARGETS policykit-agent
 	RUNTIME
-	DESTINATION "${CMAKE_INSTALL_FULL_LIBEXECDIR}/policykit-unity8/"
+	DESTINATION ${CMAKE_INSTALL_FULL_PKGLIBEXECDIR}
 )
 
 ###################
 # Format
 ###################
 
-add_custom_target(format
+add_custom_target(service-format
 	COMMAND clang-format -i -style=file ${LIBRARY_SOURCES} ${SERVICE_SOURCES}
 )

@@ -1,5 +1,5 @@
-policykit-unity8 (0.0) UNRELEASED; urgency=medium
+policykit-unity8 (0.1) UNRELEASED; urgency=medium
 
-  * Dummy file
+  * Initial release.
 
- -- Ted Gould <ted@ubuntu.com>  Thu, 14 Apr 2016 14:31:43 -0500
+ -- Ted Gould <ted@ubuntu.com>  Mon, 04 Apr 2016 15:59:37 -0500

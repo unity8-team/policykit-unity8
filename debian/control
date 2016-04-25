@@ -1,0 +1,34 @@
+Source: policykit-unity8
+Section: gnome
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: click-dev,
+               cmake,
+               cmake-extras,
+               dbus,
+               dbus-test-runner,
+               debhelper (>= 9),
+               google-mock,
+               libdbustest1-dev,
+               libglib2.0-dev,
+               libgtest-dev,
+               libnotify-dev,
+               libproperties-cpp-dev,
+               libpolkit-agent-1-dev,
+               python3-dbusmock,
+Standards-Version: 3.9.5
+Homepage: https://launchpad.net/policykit-unity8
+# If you aren't a member of ~unity-api-team but need to upload
+# packaging changes, just go ahead.  ~unity-api-team will notice
+# and sync up the code again.
+Vcs-Bzr: lp:policykit-unity8
+
+Package: policykit-unity8
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: service to prompt for policy kit permissions
+ Connects to the Policy Kit daemon for the session and responds
+ to requests for authentication. It then creates an Unity8
+ snap decision to request the password from the user, returning
+ it back to PolicyKit.

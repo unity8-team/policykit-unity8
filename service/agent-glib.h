@@ -17,24 +17,14 @@
  *     Ted Gould <ted.gould@canonical.com>
  */
 
+#pragma once
+
+#include <polkitagent/polkitagent.h>
+
 #include "agent.h"
-#include "auth-manager.h"
-#include "authentication.h"
 
-#include <csignal>
-#include <future>
+typedef struct _AgentGlib AgentGlib;
+typedef struct _AgentGlibClass AgentGlibClass;
 
-#include <glib.h>
-
-std::promise<int> retval;
-
-int main(int argc, char* argv[])
-{
-    auto auths = std::make_shared<AuthManager>();
-    auto agent = std::make_shared<Agent>(auths);
-
-    std::signal(SIGTERM, [](int signal) -> void { retval.set_value(0); });
-
-    g_debug("PolicyKit Agent Started");
-    return retval.get_future().get();
-}
+GType agent_glib_get_type(void) G_GNUC_CONST;
+AgentGlib* agent_glib_new(Agent* parent);
