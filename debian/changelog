@@ -1,5 +1,8 @@
-policykit-unity8 (0.1) UNRELEASED; urgency=medium
+policykit-unity8 (0.1+16.04.20160425-0ubuntu1) xenial; urgency=medium
 
   * Initial release.
+  * Changing name in CMake
+  * Dummy changelog for CI Train added: debian/ debian/changelog
+  * Initial implementation of the agent.
 
- -- Ted Gould <ted@ubuntu.com>  Mon, 04 Apr 2016 15:59:37 -0500
+ -- Ted Gould <ted@gould.cx>  Mon, 25 Apr 2016 21:28:52 +0000
