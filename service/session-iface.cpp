@@ -30,6 +30,11 @@
 class Session::Impl
 {
 private:
+    /** Identity we're running against */
+    std::string identity;
+    /** Cookie of the transaction */
+    std::string cookie;
+
     /** GObject based session object that we're wrapping */
     PolkitAgentSession *session;
     /** A sentinal to say whether complete has been signaled, if not
@@ -37,23 +42,17 @@ private:
     bool sessionComplete;
 
 public:
-    Impl(const std::string &identity, const std::string &cookie)
-        : session(polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str()))
+    Impl(const std::string &in_identity, const std::string &in_cookie)
+        : identity(in_identity)
+        , cookie(in_cookie)
+        , session(polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str()))
         , sessionComplete(false)
     {
     }
 
     ~Impl()
     {
-        if (!sessionComplete)
-            polkit_agent_session_cancel(session);
-
-        g_signal_handler_disconnect(session, gsig_request);
-        g_signal_handler_disconnect(session, gsig_show_info);
-        g_signal_handler_disconnect(session, gsig_show_error);
-        g_signal_handler_disconnect(session, gsig_completed);
-
-        g_clear_object(&session);
+        clearSession();
     }
 
     /** Signal from the session that requests information from the user.
@@ -112,9 +111,30 @@ private:
         which ensures we don't cancel on destruction. */
     static void completeCb(PolkitAgentSession *session, bool success, gpointer user_data)
     {
+        g_debug("PK Session Complete: %s", success ? "success" : "fail");
         auto obj = reinterpret_cast<Impl *>(user_data);
         obj->sessionComplete = true;
         obj->complete(success == TRUE);
+    }
+
+    /** Clears the saved GObject and makes sure to disconnect
+        all of its signals */
+    void clearSession()
+    {
+        if (!sessionComplete)
+            polkit_agent_session_cancel(session);
+
+        g_signal_handler_disconnect(session, gsig_request);
+        g_signal_handler_disconnect(session, gsig_show_info);
+        g_signal_handler_disconnect(session, gsig_show_error);
+        g_signal_handler_disconnect(session, gsig_completed);
+
+        gsig_request = 0;
+        gsig_show_info = 0;
+        gsig_show_error = 0;
+        gsig_completed = 0;
+
+        g_clear_object(&session);
     }
 
 public:
@@ -127,6 +147,17 @@ public:
         gsig_completed = g_signal_connect(session, "completed", G_CALLBACK(completeCb), this);
 
         polkit_agent_session_initiate(session);
+    }
+
+    /** Clears the internal GObject and then reinitializes it to
+        get another session going */
+    void reset()
+    {
+        clearSession();
+
+        session = polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str());
+
+        go();
     }
 };
 
@@ -143,6 +174,12 @@ Session::~Session()
 void Session::initiate()
 {
     return impl->go();
+}
+
+/** Resets the session so it'll start again */
+void Session::resetSession()
+{
+    return impl->reset();
 }
 
 /** Gets the request signal so that it can be connected to. */

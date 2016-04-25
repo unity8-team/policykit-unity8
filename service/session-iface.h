@@ -38,6 +38,7 @@ public:
     virtual ~Session();
 
     virtual void initiate();
+    virtual void resetSession();
 
     virtual core::Signal<const std::string &, bool> &request();
     virtual void requestResponse(const std::string &response);

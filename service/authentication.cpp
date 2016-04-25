@@ -208,10 +208,11 @@ std::shared_ptr<Session> Authentication::buildSession(const std::string &identit
         else
         {
             /* If we're not successful we'll try again */
-            session = buildSession(*identities.begin());
+            session->resetSession();
         }
     });
 
+    g_debug("Starting PK session");
     lsession->initiate();
 
     return lsession;
