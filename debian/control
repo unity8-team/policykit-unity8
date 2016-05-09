@@ -16,7 +16,7 @@ Build-Depends: click-dev,
                libnotify-dev,
                libproperties-cpp-dev,
                libpolkit-agent-1-dev,
-               libwhoopsie-dev,
+               libwhoopsie-dev (>= 0.2.50),
                python3-dbusmock,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/policykit-unity8
