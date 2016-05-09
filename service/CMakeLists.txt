@@ -4,6 +4,7 @@ include_directories(
 	${POLICYKIT_INCLUDE_DIRS}
 	${GIO_INCLUDE_DIRS}
 	${NOTIFY_INCLUDE_DIRS}
+	${WHOOPSIE_INCLUDE_DIRS}
 )
 
 add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
@@ -35,6 +36,7 @@ target_link_libraries(service-lib
 	${POLICYKIT_LIBRARIES}
 	${GIO_LIBRARIES}
 	${NOTIFY_LIBRARIES}
+	${WHOOPSIE_LIBRARIES}
 )
 
 ###################

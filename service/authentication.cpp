@@ -21,6 +21,7 @@
 
 #include <glib/gi18n.h>
 #include <iostream>
+#include <libwhoopsie/recoverable-problem.h>
 
 /* Make it so all our GObjects are easier to work with */
 template <typename T>
@@ -230,9 +231,20 @@ void Authentication::showNotification()
 
     g_debug("Showing Notification");
 
-    GError *error = nullptr;
-    notify_notification_show(notification.get(), &error);
-    check_error(error, "Unable to show notification");
+    try
+    {
+        GError *error = nullptr;
+        notify_notification_show(notification.get(), &error);
+        check_error(error, "Unable to show notification");
+    }
+    catch (std::runtime_error &e)
+    {
+        /* We're gonna handle the error here by shutting things
+           now and reporting a recoverable error */
+        cancel();
+        std::array<const char *, 3> fields = {"Message", e.what(), nullptr};
+        whoopsie_report_recoverable_problem("policykit-unity8-notification-show", 0, FALSE, fields.data());
+    }
 }
 
 /** Hide a notification. This includes closing it if open and free'ing

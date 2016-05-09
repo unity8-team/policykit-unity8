@@ -28,6 +28,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(POLICYKIT REQUIRED polkit-agent-1)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(NOTIFY REQUIRED libnotify)
+pkg_check_modules(WHOOPSIE REQUIRED libwhoopsie)
 
 ##
 ## Go deeper into the tree
