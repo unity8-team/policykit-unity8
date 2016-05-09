@@ -10,13 +10,11 @@ Build-Depends: click-dev,
                debhelper (>= 9),
                google-mock,
                libdbustest1-dev,
-#               libgcrypt20-dev,
                libglib2.0-dev,
                libgtest-dev,
                libnotify-dev,
                libproperties-cpp-dev,
                libpolkit-agent-1-dev,
-#               libwhoopsie-dev (>= 0.2.50),
                python3-dbusmock,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/policykit-unity8

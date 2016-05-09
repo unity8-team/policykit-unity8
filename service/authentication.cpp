@@ -21,8 +21,6 @@
 
 #include <glib/gi18n.h>
 #include <iostream>
-// TODO: Reenable Recoverable Error when Whoopsie gets fixed
-// #include <libwhoopsie/recoverable-problem.h>
 
 /* Make it so all our GObjects are easier to work with */
 template <typename T>
@@ -243,9 +241,6 @@ void Authentication::showNotification()
         /* We're gonna handle the error here by shutting things
            now and reporting a recoverable error */
         cancel();
-		// TODO: Reenable recoverable error when Whoopsie gets fixed
-        //std::array<const char *, 3> fields = {"Message", e.what(), nullptr};
-        //whoopsie_report_recoverable_problem("policykit-unity8-notification-show", 0, FALSE, fields.data());
     }
 }
 
