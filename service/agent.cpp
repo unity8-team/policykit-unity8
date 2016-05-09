@@ -47,8 +47,8 @@ Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
         /* Setup registration options */
         GVariantBuilder builder;
         g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-		/* Makes us the fallback agent so that system settings can override
-		   when it is setting multiple password settings all at once. */
+        /* Makes us the fallback agent so that system settings can override
+           when it is setting multiple password settings all at once. */
         g_variant_builder_add_parsed(&builder, "{'fallback', true}");
 
         /* Register it */
