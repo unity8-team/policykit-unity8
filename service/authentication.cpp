@@ -397,6 +397,8 @@ void Authentication::addRequest(const std::string &request, bool password)
         auto item = shared_gobject<GMenuItem>(g_menu_item_new(label.c_str(), "pk.response"));
         g_menu_item_set_attribute_value(item.get(), "x-canonical-type",
                                         g_variant_new_string("com.canonical.snapdecision.textfield"));
+        g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
+                                        g_variant_new_boolean(password));
         g_menu_append_item(menus.get(), item.get());
     }
     else
@@ -404,6 +406,8 @@ void Authentication::addRequest(const std::string &request, bool password)
         /* Update it */
         auto item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), label.c_str());
+        g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
+                                        g_variant_new_boolean(password));
         g_menu_remove(menus.get(), index);
         g_menu_insert_item(menus.get(), index, item.get());
     }
