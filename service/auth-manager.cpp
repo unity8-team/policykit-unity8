@@ -29,19 +29,25 @@ AuthManager::AuthManager()
         auto initsuccess = notify_init("unity8-policy-kit");
 
         if (initsuccess == FALSE)
+        {
             throw std::runtime_error("Unable to initalize libnotify");
+        }
 
         /* Ensure the server has what we need */
         auto caps = notify_get_server_caps();
         bool hasDialogs = false;
         for (auto cap = caps; cap != nullptr && !hasDialogs; cap = g_list_next(cap))
         {
-            auto capname = static_cast<const gchar *>(cap->data);
+            auto capname = static_cast<const gchar*>(cap->data);
             if (capname == nullptr)
+            {
                 continue;
+            }
 
             if (std::string(capname) == "x-canonical-private-synchronous")
+            {
                 hasDialogs = true;
+            }
         }
         g_list_free_full(caps, g_free);
 
@@ -55,7 +61,9 @@ AuthManager::AuthManager()
     });
 
     if (success)
+    {
         g_debug("Authentication Manager initialized");
+    }
 }
 
 AuthManager::~AuthManager()
@@ -89,12 +97,12 @@ AuthManager::~AuthManager()
         this authentication from the in_flight map which is tracking
         Authentication objects.
 */
-std::string AuthManager::createAuthentication(const std::string &action_id,
-                                              const std::string &message,
-                                              const std::string &icon_name,
-                                              const std::string &cookie,
-                                              const std::list<std::string> &identities,
-                                              const std::function<void(Authentication::State)> &finishedCallback)
+std::string AuthManager::createAuthentication(const std::string& action_id,
+                                              const std::string& message,
+                                              const std::string& icon_name,
+                                              const std::string& cookie,
+                                              const std::list<std::string>& identities,
+                                              const std::function<void(Authentication::State)>& finishedCallback)
 {
     return thread.executeOnThread<std::string>(
         [this, &action_id, &message, &icon_name, &cookie, &identities, &finishedCallback]() {
@@ -132,12 +140,12 @@ std::string AuthManager::createAuthentication(const std::string &action_id,
 /** The actual call to create the object, split out so that it can
     be replaced in the test suite with a mock. */
 std::shared_ptr<Authentication> AuthManager::buildAuthentication(
-    const std::string &action_id,
-    const std::string &message,
-    const std::string &icon_name,
-    const std::string &cookie,
-    const std::list<std::string> &identities,
-    const std::function<void(Authentication::State)> &finishedCallback)
+    const std::string& action_id,
+    const std::string& message,
+    const std::string& icon_name,
+    const std::string& cookie,
+    const std::list<std::string>& identities,
+    const std::function<void(Authentication::State)>& finishedCallback)
 {
     return std::make_shared<Authentication>(
 
@@ -147,7 +155,7 @@ std::shared_ptr<Authentication> AuthManager::buildAuthentication(
 /** Cancels an Authentication that is currently running.
     \param handle the handle of the Authentication object
 */
-bool AuthManager::cancelAuthentication(const std::string &handle)
+bool AuthManager::cancelAuthentication(const std::string& handle)
 {
     return thread.executeOnThread<bool>([this, &handle]() {
         auto entry = in_flight.find(handle);

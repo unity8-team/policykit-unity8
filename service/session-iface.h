@@ -34,18 +34,18 @@
 class Session
 {
 public:
-    Session(const std::string &identity, const std::string &cookie);
+    Session(const std::string& identity, const std::string& cookie);
     virtual ~Session();
 
     virtual void initiate();
     virtual void resetSession();
 
-    virtual core::Signal<const std::string &, bool> &request();
-    virtual void requestResponse(const std::string &response);
+    virtual core::Signal<const std::string&, bool>& request();
+    virtual void requestResponse(const std::string& response);
 
-    virtual core::Signal<const std::string &> &info();
-    virtual core::Signal<const std::string &> &error();
-    virtual core::Signal<bool> &complete();
+    virtual core::Signal<const std::string&>& info();
+    virtual core::Signal<const std::string&>& error();
+    virtual core::Signal<bool>& complete();
 
 protected:
     Session()

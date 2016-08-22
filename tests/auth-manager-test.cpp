@@ -46,13 +46,17 @@ protected:
 /* Useful for debugging test failures, not needed all the time (until it fails) */
 #if 0
         auto bustle = std::shared_ptr<DbusTestTask>(
-            []() {
-                DbusTestTask *bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
-                dbus_test_task_set_name(bustle, "Bustle");
-                dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
-                return bustle;
-            }(),
-            [](DbusTestTask *bustle) { g_clear_object(&bustle); });
+                          []()
+        {
+            DbusTestTask* bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
+            dbus_test_task_set_name(bustle, "Bustle");
+            dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
+            return bustle;
+        }(),
+        [](DbusTestTask * bustle)
+        {
+            g_clear_object(&bustle);
+        });
         dbus_test_service_add_task(service, bustle.get());
 #endif
 

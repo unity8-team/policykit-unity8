@@ -52,16 +52,16 @@ typedef struct _AgentGlib AgentGlib;
 class Agent
 {
 public:
-    Agent(const std::shared_ptr<AuthManager> &authmanager);
+    Agent(const std::shared_ptr<AuthManager>& authmanager);
     ~Agent();
 
-    void authRequest(const std::string &action_id,
-                     const std::string &message,
-                     const std::string &icon_name,
-                     const std::string &cookie,
-                     const std::list<std::string> &identities,
-                     const std::shared_ptr<GCancellable> &cancellable,
-                     const std::function<void(Authentication::State)> &callback);
+    void authRequest(const std::string& action_id,
+                     const std::string& message,
+                     const std::string& icon_name,
+                     const std::string& cookie,
+                     const std::list<std::string>& identities,
+                     const std::shared_ptr<GCancellable>& cancellable,
+                     const std::function<void(Authentication::State)>& callback);
 
 private:
     /** Auth manager used to create authorization UI's */
@@ -78,8 +78,8 @@ private:
         cookie that they were associated with. */
     std::map<std::string, std::pair<std::shared_ptr<GCancellable>, gulong>> cancellables;
 
-    void unregisterCancellable(const std::string &handle);
+    void unregisterCancellable(const std::string& handle);
 
-    static void cancelStatic(GCancellable *cancel, gpointer user_data);
+    static void cancelStatic(GCancellable* cancel, gpointer user_data);
     static void cancelCleanup(gpointer data);
 };

@@ -24,25 +24,25 @@
 
 /* Initialize variables, but also register the interface with DBus which
    makes us ready to start getting messages */
-Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
+Agent::Agent(const std::shared_ptr<AuthManager>& authmanager)
     : _authmanager(authmanager)
     , _thread()
 {
     std::tie(_glib,
              _agentRegistration) = _thread.executeOnThread<std::pair<std::shared_ptr<AgentGlib>, gpointer>>([this]() {
         /* Get a session */
-        GError *subjecterror = nullptr;
+        GError* subjecterror = nullptr;
         auto subject = std::shared_ptr<PolkitSubject>(
             polkit_unix_session_new_for_process_sync(getpid(), _thread.getCancellable().get(), &subjecterror),
-            [](PolkitSubject *subj) { g_clear_object(&subj); });
+            [](PolkitSubject* subj) { g_clear_object(&subj); });
         if (subjecterror != nullptr)
         {
-            auto memwrapper = std::shared_ptr<GError>(subjecterror, [](GError *error) { g_error_free(error); });
+            auto memwrapper = std::shared_ptr<GError>(subjecterror, [](GError* error) { g_error_free(error); });
             throw std::runtime_error("Unable to get Unix PID subject: " + std::string(memwrapper.get()->message));
         }
 
         /* Build our Agent subclass */
-        auto glibagent = std::shared_ptr<AgentGlib>(agent_glib_new(this), [](AgentGlib *ptr) { g_clear_object(&ptr); });
+        auto glibagent = std::shared_ptr<AgentGlib>(agent_glib_new(this), [](AgentGlib* ptr) { g_clear_object(&ptr); });
 
         /* Setup registration options */
         GVariantBuilder builder;
@@ -52,14 +52,14 @@ Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
         g_variant_builder_add_parsed(&builder, "{'fallback', true}");
 
         /* Register it */
-        GError *registererror = nullptr;
+        GError* registererror = nullptr;
         gpointer registration_handle = polkit_agent_listener_register_with_options(
-            reinterpret_cast<PolkitAgentListener *>(glibagent.get()), POLKIT_AGENT_REGISTER_FLAGS_NONE, subject.get(),
+            reinterpret_cast<PolkitAgentListener*>(glibagent.get()), POLKIT_AGENT_REGISTER_FLAGS_NONE, subject.get(),
             "/com/canonical/unity8/policyKit", g_variant_builder_end(&builder), _thread.getCancellable().get(),
             &registererror);
         if (registererror != nullptr)
         {
-            auto memwrapper = std::shared_ptr<GError>(registererror, [](GError *error) { g_error_free(error); });
+            auto memwrapper = std::shared_ptr<GError>(registererror, [](GError* error) { g_error_free(error); });
             throw std::runtime_error("Unable to register agent: " + std::string(memwrapper.get()->message));
         }
 
@@ -97,18 +97,18 @@ Agent::~Agent()
         \param cancellable Object to notify when we need to cancel the authentication
         \param callback Function to call when the user has completed the authorization
 */
-void Agent::authRequest(const std::string &action_id,
-                        const std::string &message,
-                        const std::string &icon_name,
-                        const std::string &cookie,
-                        const std::list<std::string> &identities,
-                        const std::shared_ptr<GCancellable> &cancellable,
-                        const std::function<void(Authentication::State)> &callback)
+void Agent::authRequest(const std::string& action_id,
+                        const std::string& message,
+                        const std::string& icon_name,
+                        const std::string& cookie,
+                        const std::list<std::string>& identities,
+                        const std::shared_ptr<GCancellable>& cancellable,
+                        const std::function<void(Authentication::State)>& callback)
 {
     gulong connecthandle = 0;
     if (cancellable)
     {
-        auto pair = new std::pair<Agent *, std::string>(this, cookie);
+        auto pair = new std::pair<Agent*, std::string>(this, cookie);
         connecthandle = g_cancellable_connect(cancellable.get(), G_CALLBACK(cancelStatic), pair, cancelCleanup);
     }
 
@@ -129,26 +129,28 @@ void Agent::authRequest(const std::string &action_id,
 }
 
 /** Static function to do the cancel */
-void Agent::cancelStatic(GCancellable *cancel, gpointer user_data)
+void Agent::cancelStatic(GCancellable* cancel, gpointer user_data)
 {
-    auto pair = static_cast<std::pair<Agent *, std::string> *>(user_data);
+    auto pair = static_cast<std::pair<Agent*, std::string>*>(user_data);
     pair->first->_authmanager->cancelAuthentication(pair->second);
 }
 
 /** Static function to clean up the data needed for cancelling */
 void Agent::cancelCleanup(gpointer data)
 {
-    auto pair = static_cast<std::pair<Agent *, std::string> *>(data);
+    auto pair = static_cast<std::pair<Agent*, std::string>*>(data);
     delete pair;
 }
 
 /** Disconnect from the g_cancellable */
-void Agent::unregisterCancellable(const std::string &handle)
+void Agent::unregisterCancellable(const std::string& handle)
 {
     g_debug("Unregistering cancellable authorization: %s", handle.c_str());
     auto cancel = cancellables.find(handle);
     if (cancel == cancellables.end())
+    {
         return;
+    }
     g_cancellable_disconnect(cancel->second.first.get(), cancel->second.second);
     cancellables.erase(cancel);
 }

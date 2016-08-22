@@ -37,8 +37,8 @@
 class AuthenticationTest : public ::testing::Test
 {
 protected:
-    DbusTestService *session_service = NULL;
-    GDBusConnection *session = NULL;
+    DbusTestService* session_service = NULL;
+    GDBusConnection* session = NULL;
 
     std::shared_ptr<NotificationsMock> notifications;
 
@@ -50,27 +50,31 @@ protected:
 /* Useful for debugging test failures, not needed all the time (until it fails) */
 #if 0
         auto bustle = std::shared_ptr<DbusTestTask>(
-            []() {
-                DbusTestTask *bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
-                dbus_test_task_set_name(bustle, "Bustle");
-                dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
-                return bustle;
-            }(),
-            [](DbusTestTask *bustle) { g_clear_object(&bustle); });
+                          []()
+        {
+            DbusTestTask* bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
+            dbus_test_task_set_name(bustle, "Bustle");
+            dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
+            return bustle;
+        }(),
+        [](DbusTestTask * bustle)
+        {
+            g_clear_object(&bustle);
+        });
         dbus_test_service_add_task(service, bustle.get());
 #endif
 
         /* Session Mocks */
         notifications = std::make_shared<NotificationsMock>();
 
-        dbus_test_service_add_task(session_service, (DbusTestTask *)*notifications);
+        dbus_test_service_add_task(session_service, (DbusTestTask*)*notifications);
         dbus_test_service_start_tasks(session_service);
 
         /* Watch busses */
         session = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
         ASSERT_NE(nullptr, session);
         g_dbus_connection_set_exit_on_close(session, FALSE);
-        g_object_add_weak_pointer(G_OBJECT(session), (gpointer *)&session);
+        g_object_add_weak_pointer(G_OBJECT(session), (gpointer*)&session);
 
         /* Normally done by Auth Manager */
         notify_init("authentication-test");
@@ -99,14 +103,14 @@ protected:
 
     static gboolean timeout_cb(gpointer user_data)
     {
-        GMainLoop *loop = static_cast<GMainLoop *>(user_data);
+        GMainLoop* loop = static_cast<GMainLoop*>(user_data);
         g_main_loop_quit(loop);
         return G_SOURCE_REMOVE;
     }
 
     void loop(unsigned int ms)
     {
-        GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+        GMainLoop* loop = g_main_loop_new(NULL, FALSE);
         g_timeout_add(ms, timeout_cb, loop);
         g_main_loop_run(loop);
         g_main_loop_unref(loop);
@@ -119,7 +123,7 @@ public:
     std::string _identity;
     bool _initiated;
 
-    SessionMock(const std::string &identity)
+    SessionMock(const std::string& identity)
         : _identity(identity)
         , _initiated(false)
     {
@@ -130,42 +134,42 @@ public:
         _initiated = true;
     }
 
-    core::Signal<const std::string &, bool> &request() override
+    core::Signal<const std::string&, bool>& request() override
     {
         return _request;
     }
-    core::Signal<const std::string &, bool> _request;
+    core::Signal<const std::string&, bool> _request;
 
-    core::Signal<const std::string &> &info() override
+    core::Signal<const std::string&>& info() override
     {
         return _info;
     }
-    core::Signal<const std::string &> _info;
+    core::Signal<const std::string&> _info;
 
-    core::Signal<const std::string &> &error() override
+    core::Signal<const std::string&>& error() override
     {
         return _error;
     }
-    core::Signal<const std::string &> _error;
+    core::Signal<const std::string&> _error;
 
-    core::Signal<bool> &complete() override
+    core::Signal<bool>& complete() override
     {
         return _complete;
     }
     core::Signal<bool> _complete;
 
-    MOCK_METHOD1(requestResponse, void(const std::string &));
+    MOCK_METHOD1(requestResponse, void(const std::string&));
 };
 
 class AuthenticationSessionMock : public Authentication
 {
 public:
-    AuthenticationSessionMock(const std::string &action_id,
-                              const std::string &message,
-                              const std::string &icon_name,
-                              const std::string &cookie,
-                              const std::list<std::string> &identities,
-                              const std::function<void(State)> &finishedCallback)
+    AuthenticationSessionMock(const std::string& action_id,
+                              const std::string& message,
+                              const std::string& icon_name,
+                              const std::string& cookie,
+                              const std::list<std::string>& identities,
+                              const std::function<void(State)>& finishedCallback)
         : Authentication(action_id, message, icon_name, cookie, identities, finishedCallback)
     {
         g_debug("Building Authentication object with Session Mock");
@@ -174,7 +178,7 @@ public:
     std::weak_ptr<SessionMock> lastSession;
 
 protected:
-    std::shared_ptr<Session> buildSession(const std::string &identity) override
+    std::shared_ptr<Session> buildSession(const std::string& identity) override
     {
         g_debug("Building a Mock session: %s", identity.c_str());
         auto session = std::make_shared<SessionMock>(identity);

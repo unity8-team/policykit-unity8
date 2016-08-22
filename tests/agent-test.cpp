@@ -38,11 +38,11 @@
 class AgentTest : public ::testing::Test
 {
 protected:
-    DbusTestService *system_service = NULL;
-    GDBusConnection *system = NULL;
+    DbusTestService* system_service = NULL;
+    GDBusConnection* system = NULL;
 
-    DbusTestService *session_service = NULL;
-    GDBusConnection *session = NULL;
+    DbusTestService* session_service = NULL;
+    GDBusConnection* session = NULL;
 
     std::shared_ptr<PolicyKitMock> policykit;
     std::shared_ptr<NotificationsMock> notifications;
@@ -58,38 +58,42 @@ protected:
 /* Useful for debugging test failures, not needed all the time (until it fails) */
 #if 0
         auto bustle = std::shared_ptr<DbusTestTask>(
-            []() {
-                DbusTestTask *bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
-                dbus_test_task_set_name(bustle, "Bustle");
-                dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
-                return bustle;
-            }(),
-            [](DbusTestTask *bustle) { g_clear_object(&bustle); });
+                          []()
+        {
+            DbusTestTask* bustle = DBUS_TEST_TASK(dbus_test_bustle_new("notifications-test.bustle"));
+            dbus_test_task_set_name(bustle, "Bustle");
+            dbus_test_task_set_bus(bustle, DBUS_TEST_SERVICE_BUS_SESSION);
+            return bustle;
+        }(),
+        [](DbusTestTask * bustle)
+        {
+            g_clear_object(&bustle);
+        });
         dbus_test_service_add_task(service, bustle.get());
 #endif
 
         /* System Mocks */
         policykit = std::make_shared<PolicyKitMock>();
 
-        dbus_test_service_add_task(system_service, (DbusTestTask *)*policykit);
+        dbus_test_service_add_task(system_service, (DbusTestTask*)*policykit);
         dbus_test_service_start_tasks(system_service);
 
         /* Session Mocks */
         notifications = std::make_shared<NotificationsMock>();
 
-        dbus_test_service_add_task(session_service, (DbusTestTask *)*notifications);
+        dbus_test_service_add_task(session_service, (DbusTestTask*)*notifications);
         dbus_test_service_start_tasks(session_service);
 
         /* Watch busses */
         system = g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr);
         ASSERT_NE(nullptr, system);
         g_dbus_connection_set_exit_on_close(system, FALSE);
-        g_object_add_weak_pointer(G_OBJECT(system), (gpointer *)&system);
+        g_object_add_weak_pointer(G_OBJECT(system), (gpointer*)&system);
 
         session = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
         ASSERT_NE(nullptr, session);
         g_dbus_connection_set_exit_on_close(session, FALSE);
-        g_object_add_weak_pointer(G_OBJECT(session), (gpointer *)&session);
+        g_object_add_weak_pointer(G_OBJECT(session), (gpointer*)&session);
     }
 
     virtual void TearDown()
@@ -116,14 +120,14 @@ protected:
 
     static gboolean timeout_cb(gpointer user_data)
     {
-        GMainLoop *loop = static_cast<GMainLoop *>(user_data);
+        GMainLoop* loop = static_cast<GMainLoop*>(user_data);
         g_main_loop_quit(loop);
         return G_SOURCE_REMOVE;
     }
 
     void loop(unsigned int ms)
     {
-        GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+        GMainLoop* loop = g_main_loop_new(NULL, FALSE);
         g_timeout_add(ms, timeout_cb, loop);
         g_main_loop_run(loop);
         g_main_loop_unref(loop);
@@ -134,13 +138,13 @@ class AuthManagerMock : public AuthManager
 {
 public:
     MOCK_METHOD6(createAuthentication,
-                 std::string(const std::string &,
-                             const std::string &,
-                             const std::string &,
-                             const std::string &,
-                             const std::list<std::string> &,
-                             const std::function<void(Authentication::State)> &));
-    MOCK_METHOD1(cancelAuthentication, bool(const std::string &));
+                 std::string(const std::string&,
+                             const std::string&,
+                             const std::string&,
+                             const std::string&,
+                             const std::list<std::string>&,
+                             const std::function<void(Authentication::State)>&));
+    MOCK_METHOD1(cancelAuthentication, bool(const std::string&));
 };
 
 class AuthCallbackMatcher
@@ -154,18 +158,18 @@ public:
     }
 
     template <typename T>
-    bool MatchAndExplain(T callback, ::testing::MatchResultListener *listener) const
+    bool MatchAndExplain(T callback, ::testing::MatchResultListener* listener) const
     {
         g_debug("Callback for AuthCallbackMatcher");
         callback(_state);
         return true;
     }
 
-    void DescribeTo(::std::ostream *os) const
+    void DescribeTo(::std::ostream* os) const
     {
         *os << "is a callback";
     }
-    void DescribeNegationTo(::std::ostream *os) const
+    void DescribeNegationTo(::std::ostream* os) const
     {
         *os << "is not a callback";
     }
@@ -176,20 +180,20 @@ class AuthCallbackDelay
 {
 public:
     template <typename T>
-    bool MatchAndExplain(T callback, ::testing::MatchResultListener *listener) const
+    bool MatchAndExplain(T callback, ::testing::MatchResultListener* listener) const
     {
         auto alloct = new T(callback);
         auto source = g_timeout_source_new(100);
         g_source_set_callback(source,
                               [](gpointer user_data) -> gboolean {
                                   g_debug("Callback for AuthCallbackDelay");
-                                  auto callback = reinterpret_cast<T *>(user_data);
+                                  auto callback = reinterpret_cast<T*>(user_data);
                                   (*callback)(state);
                                   return G_SOURCE_REMOVE;
                               },
                               alloct,
                               [](gpointer user_data) -> void {
-                                  auto callback = reinterpret_cast<T *>(user_data);
+                                  auto callback = reinterpret_cast<T*>(user_data);
                                   delete callback;
                               });
 
@@ -199,11 +203,11 @@ public:
         return true;
     }
 
-    void DescribeTo(::std::ostream *os) const
+    void DescribeTo(::std::ostream* os) const
     {
         *os << "is a callback";
     }
-    void DescribeNegationTo(::std::ostream *os) const
+    void DescribeNegationTo(::std::ostream* os) const
     {
         *os << "is not a callback";
     }
@@ -284,23 +288,25 @@ public:
                         std::function<void(Authentication::State)>>>
         openAuths;
 
-    virtual std::string createAuthentication(const std::string &action_id,
-                                             const std::string &message,
-                                             const std::string &icon_name,
-                                             const std::string &cookie,
-                                             const std::list<std::string> &identities,
-                                             const std::function<void(Authentication::State)> &finishedCallback)
+    virtual std::string createAuthentication(const std::string& action_id,
+                                             const std::string& message,
+                                             const std::string& icon_name,
+                                             const std::string& cookie,
+                                             const std::list<std::string>& identities,
+                                             const std::function<void(Authentication::State)>& finishedCallback)
     {
         openAuths.emplace(cookie, std::make_tuple(action_id, message, icon_name, cookie, identities, finishedCallback));
         return cookie;
     }
 
-    virtual bool cancelAuthentication(const std::string &handle)
+    virtual bool cancelAuthentication(const std::string& handle)
     {
         g_debug("Cancelling in 'AuthManagerCancelFake' item: %s", handle.c_str());
         auto entry = openAuths.find(handle);
         if (entry == openAuths.end())
+        {
             throw std::runtime_error("Unable to find item: " + handle);
+        }
 
         std::get<5>((*entry).second)(Authentication::State::CANCELLED);
         openAuths.erase(entry);

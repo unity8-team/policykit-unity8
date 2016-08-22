@@ -39,12 +39,12 @@ public:
         SUCCESS    /**< Authentication succeeded */
     };
 
-    Authentication(const std::string &in_action_id,
-                   const std::string &in_message,
-                   const std::string &in_icon_name,
-                   const std::string &in_cookie,
-                   const std::list<std::string> &in_identities,
-                   const std::function<void(State)> &in_finishedCallback);
+    Authentication(const std::string& in_action_id,
+                   const std::string& in_message,
+                   const std::string& in_icon_name,
+                   const std::string& in_cookie,
+                   const std::list<std::string>& in_identities,
+                   const std::function<void(State)>& in_finishedCallback);
     virtual ~Authentication();
 
     virtual void start();
@@ -52,14 +52,14 @@ public:
     virtual void checkResponse();
 
     /* Update Functions */
-    virtual void setInfo(const std::string &info);
-    virtual void setError(const std::string &error);
-    virtual void addRequest(const std::string &request, bool password);
+    virtual void setInfo(const std::string& info);
+    virtual void setError(const std::string& error);
+    virtual void addRequest(const std::string& request, bool password);
 
 protected:
     /* Build Functions */
     virtual std::shared_ptr<NotifyNotification> buildNotification(void);
-    virtual std::shared_ptr<Session> buildSession(const std::string &identity);
+    virtual std::shared_ptr<Session> buildSession(const std::string& identity);
 
     /* Notification Control */
     virtual void showNotification();
