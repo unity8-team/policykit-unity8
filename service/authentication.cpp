@@ -230,9 +230,18 @@ void Authentication::showNotification()
 
     g_debug("Showing Notification");
 
-    GError *error = nullptr;
-    notify_notification_show(notification.get(), &error);
-    check_error(error, "Unable to show notification");
+    try
+    {
+        GError *error = nullptr;
+        notify_notification_show(notification.get(), &error);
+        check_error(error, "Unable to show notification");
+    }
+    catch (std::runtime_error &e)
+    {
+        /* We're gonna handle the error here by shutting things
+           now and reporting a recoverable error */
+        cancel();
+    }
 }
 
 /** Hide a notification. This includes closing it if open and free'ing
