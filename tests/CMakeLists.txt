@@ -39,6 +39,8 @@ add_test (NAME agent-test
 	COMMAND agent-test
 )
 
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/agent-test.cpp")
+
 ##############
 # AuthManager
 ##############
@@ -56,6 +58,8 @@ target_link_libraries(auth-manager-test
 add_test (NAME auth-manager-test
 	COMMAND auth-manager-test
 )
+
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/auth-manager-test.cpp")
 
 ##############
 # Authentication
@@ -75,15 +79,5 @@ add_test (NAME authentication-test
 	COMMAND authentication-test
 )
 
-##############
-# Formatting
-##############
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/authentication-test.cpp")
 
-add_custom_target(test-format
-	COMMAND clang-format -i -style=file
-	agent-test.cpp
-	auth-manager-test.cpp
-	authentication-test.cpp
-	policykit-mock.h
-	notifications-mock.h
-)
