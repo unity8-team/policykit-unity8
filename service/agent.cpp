@@ -44,11 +44,19 @@ Agent::Agent(const std::shared_ptr<AuthManager> &authmanager)
         /* Build our Agent subclass */
         auto glibagent = std::shared_ptr<AgentGlib>(agent_glib_new(this), [](AgentGlib *ptr) { g_clear_object(&ptr); });
 
+        /* Setup registration options */
+        GVariantBuilder builder;
+        g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+        /* Makes us the fallback agent so that system settings can override
+           when it is setting multiple password settings all at once. */
+        g_variant_builder_add_parsed(&builder, "{'fallback', true}");
+
         /* Register it */
         GError *registererror = nullptr;
-        gpointer registration_handle = polkit_agent_listener_register(
+        gpointer registration_handle = polkit_agent_listener_register_with_options(
             reinterpret_cast<PolkitAgentListener *>(glibagent.get()), POLKIT_AGENT_REGISTER_FLAGS_NONE, subject.get(),
-            "/com/canonical/unity8/policyKit", _thread.getCancellable().get(), &registererror);
+            "/com/canonical/unity8/policyKit", g_variant_builder_end(&builder), _thread.getCancellable().get(),
+            &registererror);
         if (registererror != nullptr)
         {
             auto memwrapper = std::shared_ptr<GError>(registererror, [](GError *error) { g_error_free(error); });
