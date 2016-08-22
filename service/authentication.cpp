@@ -21,6 +21,7 @@
 
 #include <glib/gi18n.h>
 #include <iostream>
+#include <regex>
 
 /* Make it so all our GObjects are easier to work with */
 template <typename T>
@@ -376,6 +377,9 @@ void Authentication::setError(const std::string &error)
     g_menu_insert_item(menus.get(), location, item.get());
 }
 
+/** A regex to see if the incoming request is for a password */
+static const std::regex passwordDetector{"\\s*[Pp]assword:?\\s*"};
+
 /** Add a request for information from the user. This is a menu item in
     the menu model. If there isn't an item, it is created here, else it
     is updated to include this request. */
@@ -391,9 +395,10 @@ void Authentication::addRequest(const std::string &request, bool password)
     int index = findMenuItem(menus, "x-canonical-type", "com.canonical.snapdecision.textfield");
 
     std::string label;
-    if (request == "password:" || request == "Password:")
+    if (std::regex_match(request, passwordDetector))
     {
         label = _("Password");  // TODO: Add Username (Password for Joe)
+        password = true; /* Force to password even if PAM doesn't think so */
     }
     else
     {
@@ -406,6 +411,8 @@ void Authentication::addRequest(const std::string &request, bool password)
         auto item = shared_gobject<GMenuItem>(g_menu_item_new(label.c_str(), "pk.response"));
         g_menu_item_set_attribute_value(item.get(), "x-canonical-type",
                                         g_variant_new_string("com.canonical.snapdecision.textfield"));
+        g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
+                                        g_variant_new_boolean(password ? TRUE : FALSE));
         g_menu_append_item(menus.get(), item.get());
     }
     else
@@ -413,6 +420,8 @@ void Authentication::addRequest(const std::string &request, bool password)
         /* Update it */
         auto item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), label.c_str());
+        g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
+                                        g_variant_new_boolean(password ? TRUE : FALSE));
         g_menu_remove(menus.get(), index);
         g_menu_insert_item(menus.get(), index, item.get());
     }
