@@ -109,7 +109,7 @@ private:
     /** Static callback for the complete signal. Passed up to the
         complete C++ signal. Also sets the session complete flag
         which ensures we don't cancel on destruction. */
-    static void completeCb(PolkitAgentSession *session, bool success, gpointer user_data)
+    static void completeCb(PolkitAgentSession *session, gboolean success, gpointer user_data)
     {
         g_debug("PK Session Complete: %s", success ? "success" : "fail");
         auto obj = reinterpret_cast<Impl *>(user_data);
