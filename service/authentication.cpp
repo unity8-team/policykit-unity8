@@ -412,7 +412,7 @@ void Authentication::addRequest(const std::string &request, bool password)
         auto item = shared_gobject<GMenuItem>(g_menu_item_new_from_model(G_MENU_MODEL(menus.get()), index));
         g_menu_item_set_label(item.get(), label.c_str());
         g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
-                                        g_variant_new_boolean(password));
+                                        g_variant_new_boolean(password ? TRUE : FALSE));
         g_menu_remove(menus.get(), index);
         g_menu_insert_item(menus.get(), index, item.get());
     }
