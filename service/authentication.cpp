@@ -385,6 +385,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     if (request == "password:" || request == "Password:")
     {
         label = _("Password");  // TODO: Add Username (Password for Joe)
+        password = true; /* Force to password even if PAM doesn't think so */
     }
     else
     {
@@ -398,7 +399,7 @@ void Authentication::addRequest(const std::string &request, bool password)
         g_menu_item_set_attribute_value(item.get(), "x-canonical-type",
                                         g_variant_new_string("com.canonical.snapdecision.textfield"));
         g_menu_item_set_attribute_value(item.get(), "x-echo-mode-password",
-                                        g_variant_new_boolean(password));
+                                        g_variant_new_boolean(password ? TRUE : FALSE));
         g_menu_append_item(menus.get(), item.get());
     }
     else
