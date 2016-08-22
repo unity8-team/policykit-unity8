@@ -1,3 +1,16 @@
+policykit-unity8 (0.1+16.10.20160822.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Rodney Dawes ]
+  * Add missing bzr-builddeb config for non-native version for CI train.
+
+  [ Ted Gould ]
+  * Replacing that U8 isn't responding with a recoverable error instead
+    of crashing (LP: #1579837)
+  * Setup Agent so that it is the fallback agent (LP: #1579837)
+  * Setting the password echo mode on passwords (LP: #1580236)
+
+ -- Ted Gould <ted@gould.cx>  Mon, 22 Aug 2016 19:45:35 +0000
+
 policykit-unity8 (0.1+16.04.20160425-0ubuntu1) xenial; urgency=medium
 
   * Initial release.
