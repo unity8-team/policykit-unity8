@@ -46,8 +46,8 @@ public:
         baseobj = dbus_test_dbus_mock_get_object(mock, "/org/freedesktop/PolicyKit1/Authority",
                                                  "org.freedesktop.PolicyKit1.Authority", nullptr);
 
-        dbus_test_dbus_mock_object_add_method(mock, baseobj, "RegisterAuthenticationAgent",
-                                              G_VARIANT_TYPE("((sa{sv})ss)"), nullptr, "", nullptr);
+        dbus_test_dbus_mock_object_add_method(mock, baseobj, "RegisterAuthenticationAgentWithOptions",
+                                              G_VARIANT_TYPE("((sa{sv})ssa{sv})"), nullptr, "", nullptr);
 
         dbus_test_dbus_mock_object_add_method(mock, baseobj, "UnregisterAuthenticationAgent",
                                               G_VARIANT_TYPE("((sa{sv})s)"), nullptr, "", nullptr);
