@@ -2,7 +2,9 @@ Source: policykit-unity8
 Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: click-dev,
+Build-Depends: astyle,
+               clang-format,
+               click-dev,
                cmake,
                cmake-extras,
                dbus,
