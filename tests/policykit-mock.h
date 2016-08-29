@@ -32,8 +32,8 @@
 
 class PolicyKitMock
 {
-    DbusTestDbusMock *mock = nullptr;
-    DbusTestDbusMockObject *baseobj = nullptr;
+    DbusTestDbusMock* mock = nullptr;
+    DbusTestDbusMockObject* baseobj = nullptr;
     GLib::ContextThread thread;
 
 public:
@@ -65,16 +65,16 @@ public:
     operator std::shared_ptr<DbusTestTask>()
     {
         std::shared_ptr<DbusTestTask> retval(DBUS_TEST_TASK(g_object_ref(mock)),
-                                             [](DbusTestTask *task) { g_clear_object(&task); });
+                                             [](DbusTestTask* task) { g_clear_object(&task); });
         return retval;
     }
 
-    operator DbusTestTask *()
+    operator DbusTestTask*()
     {
         return DBUS_TEST_TASK(mock);
     }
 
-    operator DbusTestDbusMock *()
+    operator DbusTestDbusMock*()
     {
         return mock;
     }
@@ -88,19 +88,19 @@ public:
     }
 
     std::future<bool> beginAuthentication(
-        const std::string &dbusAddress,
-        const std::string &dbusPath,
-        const std::string &action_id,
-        const std::string &message,
-        const std::string &icon_name,
-        const std::list<std::pair<std::string, std::string>> &details,
-        const std::string &cookie,
-        const std::list<std::pair<std::string, std::map<std::string, std::shared_ptr<GVariant>>>> &identities)
+        const std::string& dbusAddress,
+        const std::string& dbusPath,
+        const std::string& action_id,
+        const std::string& message,
+        const std::string& icon_name,
+        const std::list<std::pair<std::string, std::string>>& details,
+        const std::string& cookie,
+        const std::list<std::pair<std::string, std::map<std::string, std::shared_ptr<GVariant>>>>& identities)
     {
 
         return thread.executeOnThread<std::future<bool>>(
             [dbusAddress, dbusPath, action_id, message, icon_name, details, cookie, identities]() {
-                std::promise<bool> *promise = new std::promise<bool>();
+                std::promise<bool>* promise = new std::promise<bool>();
 
                 GVariantBuilder builder;
                 g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
@@ -166,12 +166,12 @@ public:
             });
     }
 
-    std::future<bool> cancelAuthentication(const std::string &dbusAddress,
-                                           const std::string &dbusPath,
-                                           const std::string &cookie)
+    std::future<bool> cancelAuthentication(const std::string& dbusAddress,
+                                           const std::string& dbusPath,
+                                           const std::string& cookie)
     {
         return thread.executeOnThread<std::future<bool>>([dbusAddress, dbusPath, cookie]() {
-            std::promise<bool> *promise = new std::promise<bool>();
+            std::promise<bool>* promise = new std::promise<bool>();
 
             GVariantBuilder builder;
             g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
@@ -203,12 +203,12 @@ public:
         });
     }
 
-    static void dbusMessageCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
+    static void dbusMessageCallback(GObject* source_object, GAsyncResult* res, gpointer user_data)
     {
-        auto promise = reinterpret_cast<std::promise<bool> *>(user_data);
-        GError *error = nullptr;
+        auto promise = reinterpret_cast<std::promise<bool>*>(user_data);
+        GError* error = nullptr;
 
-        auto var = g_dbus_connection_call_finish(reinterpret_cast<GDBusConnection *>(source_object), res, &error);
+        auto var = g_dbus_connection_call_finish(reinterpret_cast<GDBusConnection*>(source_object), res, &error);
 
         if (error != nullptr)
         {
@@ -220,10 +220,29 @@ public:
         {
             g_debug("DBus Message complete");
             if (var != nullptr)
+            {
                 g_variant_unref(var);
+            }
             promise->set_value(true);
         }
 
         delete promise;
+    }
+
+    bool checkRegistration()
+    {
+        return thread.executeOnThread<bool>([this]() {
+            guint len = 0;
+            dbus_test_dbus_mock_object_get_method_calls(mock, baseobj, "RegisterAuthenticationAgentWithOptions", &len,
+                                                        nullptr);
+
+            return len > 0;
+        });
+    }
+
+    bool clearRegistration()
+    {
+        return thread.executeOnThread<bool>(
+            [this]() { return dbus_test_dbus_mock_object_clear_method_calls(mock, baseobj, nullptr); });
     }
 };
