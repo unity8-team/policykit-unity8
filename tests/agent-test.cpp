@@ -230,6 +230,8 @@ TEST_F(AgentTest, Init)
     auto managermock = std::make_shared<AuthManagerMock>();
 
     Agent agent(managermock);
+
+    EXPECT_TRUE(policykit->checkRegistration());
 }
 
 /* Checking that we can start an authentication setup

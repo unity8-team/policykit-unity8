@@ -3,6 +3,9 @@ include_directories("${CMAKE_SOURCE_DIR}/service")
 include_directories(${GIO_INCLUDE_DIRS})
 include_directories(${NOTIFY_INCLUDE_DIRS})
 
+include_directories(${POLICYKIT_INCLUDE_DIRS})
+add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
+
 ##############
 # Google Test
 ##############
@@ -27,6 +30,7 @@ include_directories(${DBUSTEST_INCLUDE_DIRS})
 
 add_executable (agent-test
 	agent-test.cpp
+	polkit-lib-mock.cpp
 )
 
 target_link_libraries(agent-test
@@ -39,7 +43,11 @@ add_test (NAME agent-test
 	COMMAND agent-test
 )
 
-set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/agent-test.cpp")
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/agent-test.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/polkit-lib-mock.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/policykit-mock.h"
+)
 
 ##############
 # AuthManager
