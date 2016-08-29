@@ -82,4 +82,4 @@ ENABLE_COVERAGE_REPORT(
 get_property(FORMAT_SOURCES_LOCAL GLOBAL PROPERTY FORMAT_SOURCES)
 message(STATUS "Formatting sources: ${FORMAT_SOURCES_LOCAL}")
 add_formatcode_target(${FORMAT_SOURCES_LOCAL} STYLE_NAME unity-api)
-add_formatcode_test(${FORMAT_SOURCES_LOCAL} STYLE_NAME unity-api)
+#add_formatcode_test(${FORMAT_SOURCES_LOCAL} STYLE_NAME unity-api)
