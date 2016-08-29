@@ -7,7 +7,7 @@ export G_MESSAGES_DEBUG=all
 include /usr/share/dpkg/default.mk
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_INSTALL_LIBEXECDIR=/usr/lib/$(DEB_HOST_MULTIARCH)/policykit-unity8 -Denable_tests=OFF
+	dh_auto_configure -- -DCMAKE_INSTALL_LIBEXECDIR=/usr/lib/$(DEB_HOST_MULTIARCH)/policykit-unity8
 
 %:
 	dh $@ --parallel --fail-missing
