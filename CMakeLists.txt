@@ -30,6 +30,13 @@ pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(NOTIFY REQUIRED libnotify)
 
 ##
+## Include code formatting
+##
+
+set_property(GLOBAL PROPERTY FORMAT_SOURCES)
+include(FormatCode)
+
+##
 ## Go deeper into the tree
 ##
 
@@ -67,3 +74,12 @@ ENABLE_COVERAGE_REPORT(
   TESTS agent-test authentication-test auth-manager-test
   FILTER ${filter-list}
 )
+
+##
+## Do formatting
+##
+
+get_property(FORMAT_SOURCES_LOCAL GLOBAL PROPERTY FORMAT_SOURCES)
+message(STATUS "Formatting sources: ${FORMAT_SOURCES_LOCAL}")
+add_formatcode_target(${FORMAT_SOURCES_LOCAL} STYLE_NAME unity-api)
+add_formatcode_test(${FORMAT_SOURCES_LOCAL} STYLE_NAME unity-api)

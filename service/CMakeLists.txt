@@ -37,6 +37,10 @@ target_link_libraries(service-lib
 	${NOTIFY_LIBRARIES}
 )
 
+foreach(LIBSOURCE ${LIBRARY_SOURCES})
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${LIBSOURCE}")
+endforeach()
+
 ###################
 # Service
 ###################
@@ -56,10 +60,7 @@ install(TARGETS policykit-agent
 	DESTINATION ${CMAKE_INSTALL_FULL_PKGLIBEXECDIR}
 )
 
-###################
-# Format
-###################
+foreach(SERVICESRC ${SERVICE_SOURCES})
+set_property(GLOBAL APPEND PROPERTY FORMAT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${SERVICESRC}")
+endforeach()
 
-add_custom_target(service-format
-	COMMAND clang-format -i -style=file ${LIBRARY_SOURCES} ${SERVICE_SOURCES}
-)

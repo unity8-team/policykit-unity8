@@ -79,7 +79,9 @@ ContextThread::ContextThread(std::function<void()> beforeLoop, std::function<voi
 ContextThread::~ContextThread()
 {
     if (!isCancelled())
+    {
         runQueuedJobs();
+    }
     quit();
 }
 

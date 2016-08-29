@@ -28,49 +28,51 @@ template <typename T>
 class shared_gobject : public std::shared_ptr<T>
 {
 public:
-    shared_gobject(T *obj)
-        : std::shared_ptr<T>(obj, [](T *obj) { g_clear_object(&obj); })
+    shared_gobject(T* obj)
+        : std::shared_ptr<T>(obj, [](T* obj) { g_clear_object(&obj); })
     {
     }
 };
 
 /* Handle errors into exceptions and make sure we free the
    error as well */
-inline static void check_error(GError *error, const std::string &message)
+inline static void check_error(GError* error, const std::string& message)
 {
     if (error == nullptr)
+    {
         return;
+    }
     auto fullmessage = message + ": " + error->message;
     g_error_free(error);
     throw std::runtime_error(fullmessage);
 }
 
 /* Static helpers for C callbacks */
-static void notification_closed(NotifyNotification *notification, gpointer user_data)
+static void notification_closed(NotifyNotification* notification, gpointer user_data)
 {
-    auto obj = reinterpret_cast<Authentication *>(user_data);
+    auto obj = reinterpret_cast<Authentication*>(user_data);
     obj->cancel();
 }
 
-static void notification_action_response(NotifyNotification *notification, char *action, gpointer user_data)
+static void notification_action_response(NotifyNotification* notification, char* action, gpointer user_data)
 {
-    auto obj = reinterpret_cast<Authentication *>(user_data);
+    auto obj = reinterpret_cast<Authentication*>(user_data);
     obj->checkResponse();
 }
 
-static void notification_action_cancel(NotifyNotification *notification, char *action, gpointer user_data)
+static void notification_action_cancel(NotifyNotification* notification, char* action, gpointer user_data)
 {
-    auto obj = reinterpret_cast<Authentication *>(user_data);
+    auto obj = reinterpret_cast<Authentication*>(user_data);
     obj->cancel();
 }
 
 /* Initialize everything */
-Authentication::Authentication(const std::string &in_action_id,
-                               const std::string &in_message,
-                               const std::string &in_icon_name,
-                               const std::string &in_cookie,
-                               const std::list<std::string> &in_identities,
-                               const std::function<void(State)> &in_finishedCallback)
+Authentication::Authentication(const std::string& in_action_id,
+                               const std::string& in_message,
+                               const std::string& in_icon_name,
+                               const std::string& in_cookie,
+                               const std::list<std::string>& in_identities,
+                               const std::function<void(State)>& in_finishedCallback)
     : action_id(in_action_id)
     , message(in_message)
     , icon_name(in_icon_name)
@@ -78,7 +80,7 @@ Authentication::Authentication(const std::string &in_action_id,
     , identities(in_identities)
     , finishedCallback(in_finishedCallback)
 {
-    GError *error = nullptr;
+    GError* error = nullptr;
 
     /* Get the Bus */
     sessionBus = shared_gobject<GDBusConnection>(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
@@ -114,9 +116,13 @@ Authentication::~Authentication()
     cancel();
 
     if (menusExport != 0)
+    {
         g_dbus_connection_unexport_menu_model(sessionBus.get(), menusExport);
+    }
     if (actionsExport != 0)
+    {
         g_dbus_connection_unexport_action_group(sessionBus.get(), actionsExport);
+    }
 }
 
 /** Used to start the session working, split out from the constructor
@@ -135,7 +141,9 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     auto notification = shared_gobject<NotifyNotification>(
         notify_notification_new(_("Elevated permissions required"), message.c_str(), icon_name.c_str()));
     if (!notification)
+    {
         throw std::runtime_error("Unable to setup notification object");
+    }
 
     notify_notification_set_timeout(notification.get(), NOTIFY_EXPIRES_NEVER);
     notify_notification_add_action(notification.get(), "okay", _("Login"), notification_action_response, this,
@@ -188,16 +196,16 @@ std::shared_ptr<NotifyNotification> Authentication::buildNotification(void)
     \param identity A PK identity string
     \param cookie An unique identifier for this authentication
 */
-std::shared_ptr<Session> Authentication::buildSession(const std::string &identity)
+std::shared_ptr<Session> Authentication::buildSession(const std::string& identity)
 {
     g_debug("Building a new PK session");
     auto lsession = std::make_shared<Session>(identity, cookie);
 
-    lsession->request().connect([this](const std::string &prompt, bool password) { addRequest(prompt, password); });
+    lsession->request().connect([this](const std::string& prompt, bool password) { addRequest(prompt, password); });
 
-    lsession->info().connect([this](const std::string &info) { setInfo(info); });
+    lsession->info().connect([this](const std::string& info) { setInfo(info); });
 
-    lsession->error().connect([this](const std::string &error) { setError(error); });
+    lsession->error().connect([this](const std::string& error) { setError(error); });
 
     lsession->complete().connect([this](bool success) {
         hideNotification();
@@ -224,20 +232,24 @@ std::shared_ptr<Session> Authentication::buildSession(const std::string &identit
 void Authentication::showNotification()
 {
     if (!notification)
+    {
         notification = buildNotification();
+    }
 
     if (!notification)
+    {
         return;
+    }
 
     g_debug("Showing Notification");
 
     try
     {
-        GError *error = nullptr;
+        GError* error = nullptr;
         notify_notification_show(notification.get(), &error);
         check_error(error, "Unable to show notification");
     }
-    catch (std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
         /* We're gonna handle the error here by shutting things
            now and reporting a recoverable error */
@@ -252,19 +264,25 @@ void Authentication::hideNotification()
 {
     /* Close the notification */
     if (notification)
+    {
         notify_notification_close(notification.get(), nullptr);
+    }
     notification.reset();
 
     /* Clear the menu */
     if (menus)
+    {
         g_menu_remove_all(G_MENU(menus.get()));
+    }
 
     /* Clear the response */
     if (actions)
     {
         auto action = g_action_map_lookup_action(G_ACTION_MAP(actions.get()), "response"); /* No transfer */
         if (action != nullptr && G_IS_SIMPLE_ACTION(action))
+        {
             g_simple_action_set_state(G_SIMPLE_ACTION(action), g_variant_new_string(""));
+        }
     }
 }
 
@@ -294,7 +312,7 @@ void Authentication::checkResponse()
 }
 
 /** Find a menu item in a menu that has a specific value on an attribute */
-int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const std::string &value)
+int findMenuItem(std::shared_ptr<GMenu>& menu, const std::string& type, const std::string& value)
 {
     int index = -1;
     for (int i = 0; i < g_menu_model_get_n_items(G_MENU_MODEL(menu.get())); i++)
@@ -303,7 +321,9 @@ int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const st
             g_menu_model_get_item_attribute_value(G_MENU_MODEL(menu.get()), i, type.c_str(), G_VARIANT_TYPE_STRING);
 
         if (vtext == nullptr)
+        {
             continue;
+        }
 
         auto text = std::string(g_variant_get_string(vtext, nullptr));
         g_variant_unref(vtext);
@@ -321,7 +341,7 @@ int findMenuItem(std::shared_ptr<GMenu> &menu, const std::string &type, const st
 /** Set the info string to show the user. If there is no info menu item
     then one is created for the information. If there is currently one it
     will be updated to be the new string */
-void Authentication::setInfo(const std::string &info)
+void Authentication::setInfo(const std::string& info)
 {
     int index = findMenuItem(menus, "x-canonical-unity8-policy-kit-type", "info");
 
@@ -347,7 +367,7 @@ void Authentication::setInfo(const std::string &info)
 /** Set the error string to show the user. If there is no error menu item
     then one is created for the information. If there is currently one it
     will be updated to be the new string */
-void Authentication::setError(const std::string &error)
+void Authentication::setError(const std::string& error)
 {
     int index = findMenuItem(menus, "x-canonical-unity8-policy-kit-type", "error");
 
@@ -383,13 +403,15 @@ static const std::regex passwordDetector{"\\s*[Pp]assword:?\\s*"};
 /** Add a request for information from the user. This is a menu item in
     the menu model. If there isn't an item, it is created here, else it
     is updated to include this request. */
-void Authentication::addRequest(const std::string &request, bool password)
+void Authentication::addRequest(const std::string& request, bool password)
 {
     /* If we're showing one and we get a request, uhm,
        that is weird. But let's just clear it and start
        again. */
     if (notification)
+    {
         hideNotification();
+    }
 
     /* Fix menu item */
     int index = findMenuItem(menus, "x-canonical-type", "com.canonical.snapdecision.textfield");
@@ -398,7 +420,7 @@ void Authentication::addRequest(const std::string &request, bool password)
     if (std::regex_match(request, passwordDetector))
     {
         label = _("Password");  // TODO: Add Username (Password for Joe)
-        password = true; /* Force to password even if PAM doesn't think so */
+        password = true;        /* Force to password even if PAM doesn't think so */
     }
     else
     {
@@ -439,12 +461,16 @@ void Authentication::issueCallback(Authentication::State state)
        once. We call this in the destructor to
        ensure that it is called at least once. */
     if (callbackSent)
+    {
         return;
+    }
 
     /* Check to ensure we were given a valid callback
        and then call it. */
     if (finishedCallback)
+    {
         finishedCallback(state);
+    }
 
     callbackSent = true;
 }

@@ -36,13 +36,13 @@ private:
     std::string cookie;
 
     /** GObject based session object that we're wrapping */
-    PolkitAgentSession *session;
+    PolkitAgentSession* session;
     /** A sentinal to say whether complete has been signaled, if not
         we need to cancel before unref'ing the session. */
     bool sessionComplete;
 
 public:
-    Impl(const std::string &in_identity, const std::string &in_cookie)
+    Impl(const std::string& in_identity, const std::string& in_cookie)
         : identity(in_identity)
         , cookie(in_cookie)
         , session(polkit_agent_session_new(polkit_identity_from_string(identity.c_str(), nullptr), cookie.c_str()))
@@ -57,11 +57,11 @@ public:
 
     /** Signal from the session that requests information from the user.
         Includes the text to be shown and whether it is a password or not. */
-    core::Signal<const std::string &, bool> request;
+    core::Signal<const std::string&, bool> request;
     /** Signal from the session that includes info to show to the user */
-    core::Signal<const std::string &> info;
+    core::Signal<const std::string&> info;
     /** Signal from the session that includes an error to show to the user */
-    core::Signal<const std::string &> error;
+    core::Signal<const std::string&> error;
     /** Signal from the session that says the session is complete, a boolean
         for whether it was successful or not. */
     core::Signal<bool> complete;
@@ -73,7 +73,7 @@ public:
 
     /** Sends a response to the Polkit Session.
         \param response Text response from the user */
-    void requestResponse(const std::string &response)
+    void requestResponse(const std::string& response)
     {
         polkit_agent_session_response(session, response.c_str());
     }
@@ -81,38 +81,38 @@ public:
 private:
     /** Static callback for the request signal. Passed up to the
         request C++ signal. */
-    static void requestCb(PolkitAgentSession *session, const gchar *text, gboolean password, gpointer user_data)
+    static void requestCb(PolkitAgentSession* session, const gchar* text, gboolean password, gpointer user_data)
     {
         g_debug("PK Session Request: %s", text);
-        auto obj = reinterpret_cast<Impl *>(user_data);
+        auto obj = reinterpret_cast<Impl*>(user_data);
         obj->request(text, password == TRUE);
     }
 
     /** Static callback for the info signal. Passed up to the
         info C++ signal. */
-    static void infoCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
+    static void infoCb(PolkitAgentSession* session, const gchar* text, gpointer user_data)
     {
         g_debug("PK Session Info: %s", text);
-        auto obj = reinterpret_cast<Impl *>(user_data);
+        auto obj = reinterpret_cast<Impl*>(user_data);
         obj->info(text);
     }
 
     /** Static callback for the error signal. Passed up to the
         error C++ signal. */
-    static void errorCb(PolkitAgentSession *session, const gchar *text, gpointer user_data)
+    static void errorCb(PolkitAgentSession* session, const gchar* text, gpointer user_data)
     {
         g_debug("PK Session Error: %s", text);
-        auto obj = reinterpret_cast<Impl *>(user_data);
+        auto obj = reinterpret_cast<Impl*>(user_data);
         obj->error(text);
     }
 
     /** Static callback for the complete signal. Passed up to the
         complete C++ signal. Also sets the session complete flag
         which ensures we don't cancel on destruction. */
-    static void completeCb(PolkitAgentSession *session, gboolean success, gpointer user_data)
+    static void completeCb(PolkitAgentSession* session, gboolean success, gpointer user_data)
     {
         g_debug("PK Session Complete: %s", success ? "success" : "fail");
-        auto obj = reinterpret_cast<Impl *>(user_data);
+        auto obj = reinterpret_cast<Impl*>(user_data);
         obj->sessionComplete = true;
         obj->complete(success == TRUE);
     }
@@ -122,7 +122,9 @@ private:
     void clearSession()
     {
         if (!sessionComplete)
+        {
             polkit_agent_session_cancel(session);
+        }
 
         g_signal_handler_disconnect(session, gsig_request);
         g_signal_handler_disconnect(session, gsig_show_info);
@@ -161,7 +163,7 @@ public:
     }
 };
 
-Session::Session(const std::string &identity, const std::string &cookie)
+Session::Session(const std::string& identity, const std::string& cookie)
     : impl(std::make_shared<Impl>(identity, cookie))
 {
 }
@@ -183,7 +185,7 @@ void Session::resetSession()
 }
 
 /** Gets the request signal so that it can be connected to. */
-core::Signal<const std::string &, bool> &Session::request()
+core::Signal<const std::string&, bool>& Session::request()
 {
     return impl->request;
 }
@@ -191,25 +193,25 @@ core::Signal<const std::string &, bool> &Session::request()
 /** Returns a response from the user to the session.
     \param response Text response
 */
-void Session::requestResponse(const std::string &response)
+void Session::requestResponse(const std::string& response)
 {
     return impl->requestResponse(response);
 }
 
 /** Gets the info signal so that it can be connected to. */
-core::Signal<const std::string &> &Session::info()
+core::Signal<const std::string&>& Session::info()
 {
     return impl->info;
 }
 
 /** Gets the error signal so that it can be connected to. */
-core::Signal<const std::string &> &Session::error()
+core::Signal<const std::string&>& Session::error()
 {
     return impl->error;
 }
 
 /** Gets the complete signal so that it can be connected to. */
-core::Signal<bool> &Session::complete()
+core::Signal<bool>& Session::complete()
 {
     return impl->complete;
 }

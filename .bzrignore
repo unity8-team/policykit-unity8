@@ -20,3 +20,7 @@ xml/
 docs/_build/*
 po/POTFILES
 po/policykit-unity8.pot
+formatcode
+formatcode_format.1.cmake
+formatcode_test.1.cmake
+base

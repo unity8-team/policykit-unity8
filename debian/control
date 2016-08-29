@@ -2,7 +2,10 @@ Source: policykit-unity8
 Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: click-dev,
+Build-Depends: astyle,
+# Extra version for Vivid
+               clang-format | clang-format-3.4,
+               click-dev,
                cmake,
                cmake-extras,
                dbus,
