@@ -1,3 +1,10 @@
+policykit-unity8 (0.1+16.10.20160829-0ubuntu1) yakkety; urgency=medium
+
+  * Use cmake-extras for code formatting and reformat code
+  * Fix test suite and make it run on package build
+
+ -- Ted Gould <ted@gould.cx>  Mon, 29 Aug 2016 20:50:39 +0000
+
 policykit-unity8 (0.1+16.10.20160822.1-0ubuntu1) yakkety; urgency=medium
 
   [ Rodney Dawes ]
