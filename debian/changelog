@@ -1,3 +1,9 @@
+policykit-unity8 (0.1+17.04.20161116-0ubuntu1) zesty; urgency=medium
+
+  * Let policykit-unity8 work inside of a unity8 snap. (LP: #1629009)
+
+ -- Michael Terry <michael.terry@canonical.com>  Wed, 16 Nov 2016 19:42:17 +0000
+
 policykit-unity8 (0.1+16.10.20160829-0ubuntu1) yakkety; urgency=medium
 
   * Use cmake-extras for code formatting and reformat code
