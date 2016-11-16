@@ -3,5 +3,5 @@ description "PolicyKit Agent that shows Snap Decisions on Unity8"
 start on started unity8
 stop on stopping unity8
 
-exec @CMAKE_INSTALL_FULL_PKGLIBEXECDIR@/policykit-agent
+exec $SNAP@CMAKE_INSTALL_FULL_PKGLIBEXECDIR@/policykit-agent
 respawn
