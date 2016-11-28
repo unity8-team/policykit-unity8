@@ -13,7 +13,7 @@ add_definitions(-DPOLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE)
 set (GTEST_SOURCE_DIR /usr/src/gtest/src)
 set (GTEST_INCLUDE_DIR ${GTEST_SOURCE_DIR}/..)
 
-add_subdirectory("/usr/src/gmock" gmock)
+find_package(GMock)
 
 include_directories(${GTEST_INCLUDE_DIR})
 
@@ -34,7 +34,7 @@ add_executable (agent-test
 )
 
 target_link_libraries(agent-test
-	gmock_main
+	${GMOCK_LIBRARIES}
 	service-lib
 	${DBUSTEST_LIBRARIES}
 )
@@ -58,7 +58,7 @@ add_executable (auth-manager-test
 )
 
 target_link_libraries(auth-manager-test
-	gmock_main
+	${GMOCK_LIBRARIES}
 	service-lib
 	${DBUSTEST_LIBRARIES}
 )
@@ -78,7 +78,7 @@ add_executable (authentication-test
 )
 
 target_link_libraries(authentication-test
-	gmock_main
+	${GMOCK_LIBRARIES}
 	service-lib
 	${DBUSTEST_LIBRARIES}
 )
