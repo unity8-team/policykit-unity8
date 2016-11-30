@@ -1,3 +1,9 @@
+policykit-unity8 (0.1+17.04.20161130-0ubuntu1) zesty; urgency=medium
+
+  * Compile on zesty
+
+ -- Albert Astals Cid <albert.astals@canonical.com>  Wed, 30 Nov 2016 10:10:33 +0000
+
 policykit-unity8 (0.1+17.04.20161116-0ubuntu1) zesty; urgency=medium
 
   * Let policykit-unity8 work inside of a unity8 snap. (LP: #1629009)
