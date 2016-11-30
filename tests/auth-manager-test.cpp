@@ -18,8 +18,10 @@
  */
 
 /* Test Libraries */
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#pragma GCC diagnostic pop
 #include <libdbustest/dbus-test.h>
 
 /* Mocks */
