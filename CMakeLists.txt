@@ -34,7 +34,7 @@ pkg_check_modules(NOTIFY REQUIRED libnotify)
 ##
 
 set_property(GLOBAL PROPERTY FORMAT_SOURCES)
-include(FormatCode)
+find_package(FormatCode)
 
 ##
 ## Go deeper into the tree
@@ -60,7 +60,7 @@ add_subdirectory(tests)
 ## Coverage
 ##
 
-include(EnableCoverageReport)
+find_package(CoverageReport)
 set(filter-list)
 list(APPEND filter-list "/usr")
 list(APPEND filter-list "${CMAKE_SOURCE_DIR}/tests")
