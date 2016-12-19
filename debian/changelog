@@ -1,3 +1,9 @@
+policykit-unity8 (0.1+17.04.20161219-0ubuntu1) zesty; urgency=medium
+
+  * Compatibility with unversioned cmake-extras modules (LP: #1563573)
+
+ -- Pete Woods <pete.woods@canonical.com>  Mon, 19 Dec 2016 09:35:52 +0000
+
 policykit-unity8 (0.1+17.04.20161130-0ubuntu1) zesty; urgency=medium
 
   * Compile on zesty
