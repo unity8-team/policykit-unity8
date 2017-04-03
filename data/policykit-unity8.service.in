@@ -1,0 +1,9 @@
+[Unit]
+Description=PolicyKit user agent for Unity 8
+PartOf=graphical-session.target
+After=unity8.service
+BindsTo=unity8.service
+
+[Service]
+ExecStart=@CMAKE_INSTALL_FULL_PKGLIBEXECDIR@/policykit-agent
+Restart=on-failure
