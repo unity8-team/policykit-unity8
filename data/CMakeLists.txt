@@ -15,7 +15,7 @@ install(
 )
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/policykit-unity8.override
+  FILES policykit-unity8.override
   DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/upstart/systemd-session/upstart"
 )
 
